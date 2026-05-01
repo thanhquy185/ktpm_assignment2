@@ -1,6 +1,7 @@
 package com.shopcart.services;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class ProductService {
         return this.productRepository.findAll();
     }
 
-    public Product getProductById(String id) {
+    public Product getProductById(UUID id) {
         return this.productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFound(id));
     }

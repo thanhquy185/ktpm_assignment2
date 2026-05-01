@@ -1,12 +1,14 @@
 package com.shopcart.services;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
 import com.shopcart.entities.Coupon;
 import com.shopcart.enums.CouponTypeEnum;
 import com.shopcart.exceptions.CouponNotFound;
+import com.shopcart.exceptions.CouponNotFoundByCode;
 import com.shopcart.repositories.CouponRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -20,19 +22,24 @@ public class CouponService {
         return this.couponRepository.findAll();
     }
 
-    public Coupon getCouponById(String id) {
+    public Coupon getCouponById(UUID id) {
         return this.couponRepository.findById(id)
                 .orElseThrow(() -> new CouponNotFound(id));
     }
 
+    public Coupon getCouponByCode(String code) {
+        return this.couponRepository.findByCode(code)
+                .orElseThrow(() -> new CouponNotFoundByCode(code));
+    }
+
     public double calculateDiscount(String type, Long value, Long subtotal) {
-        double result = 0;
+        double discount = 0;
         if (type.equals(CouponTypeEnum.FIXED.getValue())) {
-            result = value;
+            discount = value;
         } else {
-            result = 1.0 * subtotal * value / 100;
+            discount = 1.0 * subtotal * value / 100;
         }
 
-        return result;
+        return discount;
     }
 }

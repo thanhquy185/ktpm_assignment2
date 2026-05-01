@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
+import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.shopcart.enums.OrderStatusEnum;
 import com.shopcart.repositories.converters.OrderStatusConverter;
 
@@ -19,7 +21,7 @@ import com.shopcart.repositories.converters.OrderStatusConverter;
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
     @Column(nullable = false)
     private String shippingAddress;
@@ -42,6 +44,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     @ManyToOne
@@ -49,5 +52,6 @@ public class Order {
     private Coupon coupon;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<OrderItem> orderItems;
 }

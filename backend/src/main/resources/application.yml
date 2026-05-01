@@ -1,3 +1,8 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
 spring:
   application:
     name: shopcart-backend
@@ -11,16 +16,22 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
 
-server:
-  port: 8080
-  servlet:
-    context-path: /
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration #src/main/resources/db/migration
+
+jwt:
+  base64-secret: XJvVeX4befworCdrEN8c0cEvg31ePhFO1zTIAvK8UfboZzmlS7A9cuWO5LKlVcfU7lJrR1WVJypseGylxREqBg
+  access-token-validity-in-seconds: 86400
+  refresh-token-validity-in-seconds: 86400
 
 logging:
   level:

@@ -5,6 +5,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
+import java.util.UUID;
+
 import com.shopcart.enums.ProductStatusEnum;
 import com.shopcart.repositories.converters.ProductStatusConverter;
 
@@ -30,7 +32,7 @@ import lombok.NoArgsConstructor;
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
     @Column(nullable = true)
     private String image;

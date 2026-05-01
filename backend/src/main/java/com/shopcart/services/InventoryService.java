@@ -10,6 +10,7 @@ import com.shopcart.repositories.InventoryRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,22 +21,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class InventoryService {
     private final InventoryRepository inventoryRepository;
 
-    public List<Inventory> getAllOrder() {
+    public List<Inventory> getAllInventory() {
         return this.inventoryRepository.findAll();
     }
 
-    public Inventory getOrderById(String id) {
+    public Inventory getInventoryById(UUID id) {
         return this.inventoryRepository.findById(id)
                 .orElseThrow(() -> new InventoryNotFound(id));
     }
 
-    public Inventory getOrderByProductId(String productId) {
+    public Inventory getInventoryByProductId(UUID productId) {
         return this.inventoryRepository.findByProductId(productId)
                 .orElseThrow(() -> new ProductNotFoundInInventory(productId));
     }
 
-    public boolean isAvailable(String productId, Long quantity) {
-        Inventory inventory = this.getOrderByProductId(productId);
+    public boolean isAvailable(UUID productId, Long quantity) {
+        Inventory inventory = this.getInventoryByProductId(productId);
         if (quantity <= 0) {
             throw new InvalidInventoryQuantity();
         }
@@ -43,8 +44,8 @@ public class InventoryService {
         return inventory.getStock() >= quantity;
     }
 
-    public Inventory increaseStock(String productId, Long quantity) {
-        Inventory inventory = this.getOrderByProductId(productId);
+    public Inventory increaseStock(UUID productId, Long quantity) {
+        Inventory inventory = this.getInventoryByProductId(productId);
         if (quantity <= 0) {
             throw new InvalidInventoryQuantity();
         }
@@ -53,8 +54,8 @@ public class InventoryService {
         return this.inventoryRepository.save(inventory);
     }
 
-    public Inventory decreaseStock(String productId, Long quantity) {
-        Inventory inventory = this.getOrderByProductId(productId);
+    public Inventory decreaseStock(UUID productId, Long quantity) {
+        Inventory inventory = this.getInventoryByProductId(productId);
         if (quantity <= 0) {
             throw new InvalidInventoryQuantity();
         }

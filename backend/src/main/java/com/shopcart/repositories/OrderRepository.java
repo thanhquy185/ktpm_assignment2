@@ -6,9 +6,11 @@ import org.springframework.stereotype.Repository;
 import com.shopcart.entities.Order;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, String> {
-    List<Order> findByUserId(String userId);
-    Order findByIdAndUserId(String orderId, String userId);
+public interface OrderRepository extends JpaRepository<Order, UUID> {
+    List<Order> findByUserId(UUID userId);
+
+    Order findByIdAndUserId(UUID orderId, String userId);
 }

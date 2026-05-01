@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -32,17 +33,17 @@ public class CartService {
         return this.cartRepository.findAll();
     }
 
-    public Cart getCartById(String id) {
+    public Cart getCartById(UUID id) {
         return this.cartRepository.findById(id)
                 .orElseThrow(() -> new CartNotFound(id));
     }
 
-    public Cart getCartByUserId(String userId) {
+    public Cart getCartByUserId(UUID userId) {
         return this.cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new UserNotFoundInCart(userId));
     }
 
-    public Cart getOrCreateCart(String userId) {
+    private Cart getOrCreateCart(UUID userId) {
         Cart cart = this.cartRepository.findByUserId(userId).orElseGet(() -> {
             return Cart.builder()
                     .user(this.userService.getUserById(userId))
@@ -55,24 +56,19 @@ public class CartService {
         return cart;
     }
 
-    private void updateCartTotal(String cartId) {
-        Cart cart = this.getCartById(cartId);
+    private void updateCartTotal(UUID cartId) {
+        Long totalQuantity = this.cartItemRepository.sumQuantity(cartId);
+        Long totalPrice = this.cartItemRepository.sumPrice(cartId);
 
-        Long newTotalQuantity = cart.getItems().stream()
-                .map(CartItem::getQuantity)
-                .reduce(0L, Long::sum);
-        cart.setTotalQuantity(newTotalQuantity);
-
-        Long newTotalPrice = cart.getItems().stream()
-                .map(item -> item.getQuantity() * item.getPrice())
-                .reduce(0L, Long::sum);
-        cart.setTotalPrice(newTotalPrice);
+        Cart cart = getCartById(cartId);
+        cart.setTotalQuantity(totalQuantity != null ? totalQuantity : 0L);
+        cart.setTotalPrice(totalPrice != null ? totalPrice : 0L);
 
         this.cartRepository.save(cart);
     }
 
-    public CartItem addToCart(String userId, CartItemAddToCartRequest request) {
-        Product product = this.productService.getProductById(request.getProductId());
+    public CartItem addToCart(UUID userId, CartItemAddToCartRequest request) {
+        Product product = this.productService.getProductById(UUID.fromString(request.getProductId()));
         if (request.getQuantity() <= 0) {
             throw new CartItemQuantityGreaterThanZero();
         }
@@ -82,7 +78,7 @@ public class CartService {
 
         Cart cart = this.getOrCreateCart(userId);
         CartItem cartItemExists = this.cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())
-                .orElseGet(null);
+                .orElse(null);
         CartItem cartItemCreated;
         if (cartItemExists != null) {
             Long newQuantity = cartItemExists.getQuantity() + request.getQuantity();
@@ -102,13 +98,13 @@ public class CartService {
             cartItemCreated = this.cartItemRepository.save(cartItemCreated);
         }
 
-        updateCartTotal(cart.getId());
+        this.updateCartTotal(cart.getId());
 
         return cartItemCreated;
     }
 
-    public CartItem updateQuantity(String userId, CartItemUpdateQuantityRequest request) {
-        Product product = this.productService.getProductById(request.getProductId());
+    public CartItem updateQuantity(UUID userId, CartItemUpdateQuantityRequest request) {
+        Product product = this.productService.getProductById(UUID.fromString(request.getProductId()));
         if (request.getQuantity() <= 0) {
             throw new CartItemQuantityGreaterThanZero();
         }
@@ -118,30 +114,33 @@ public class CartService {
 
         Cart cart = this.getCartByUserId(userId);
         CartItem cartItemUpdated = this.cartItemRepository
-                .findByCartIdAndProductId(cart.getId(), request.getProductId())
-                .orElseThrow(() -> new CartItemNotFound(cart.getId(), request.getProductId()));
+                .findByCartIdAndProductId(cart.getId(), product.getId())
+                .orElseThrow(() -> new CartItemNotFound(cart.getId(), product.getId()));
         cartItemUpdated.setQuantity(request.getQuantity());
         this.cartItemRepository.save(cartItemUpdated);
 
-        updateCartTotal(cart.getId());
+        this.updateCartTotal(cart.getId());
 
         return cartItemUpdated;
     }
 
-    public CartItem removeFromCart(String userId, CartItemRemoveFromCartRequest request) {
+    public CartItem removeFromCart(UUID userId, CartItemRemoveFromCartRequest request) {
+        UUID productId = UUID.fromString(request.getProductId());
         Cart cart = this.getCartByUserId(userId);
         CartItem cartItemDeleted = this.cartItemRepository
-                .findByCartIdAndProductId(cart.getId(), request.getProductId())
-                .orElseThrow(() -> new CartItemNotFound(cart.getId(), request.getProductId()));
+                .findByCartIdAndProductId(cart.getId(), productId)
+                .orElseThrow(() -> new CartItemNotFound(cart.getId(), productId));
         this.cartItemRepository.delete(cartItemDeleted);
 
-        updateCartTotal(cart.getId());
+        this.updateCartTotal(cart.getId());
 
         return cartItemDeleted;
     }
 
-    public void clearCart(String userId) {
+    public void clearCart(UUID userId) {
         Cart cart = this.getCartByUserId(userId);
         this.cartItemRepository.deleteByCartId(cart.getId());
+
+        this.updateCartTotal(userId);
     }
 }

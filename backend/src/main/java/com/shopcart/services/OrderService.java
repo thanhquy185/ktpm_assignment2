@@ -1,8 +1,8 @@
 package com.shopcart.services;
 
-import com.shopcart.dtos.request.OrderItemRequest;
 import com.shopcart.dtos.request.OrderCancelRequest;
 import com.shopcart.dtos.request.OrderCreateRequest;
+import com.shopcart.dtos.request.OrderItemRequest;
 import com.shopcart.entities.Coupon;
 import com.shopcart.entities.Order;
 import com.shopcart.entities.OrderItem;
@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -31,21 +32,23 @@ public class OrderService {
         return this.orderRepository.findAll();
     }
 
-    public Order getOrderById(String id) {
+    public Order getOrderById(UUID id) {
         return this.orderRepository.findById(id).orElseThrow(() -> new OrderNotFound(id));
     }
 
-    public List<Order> getOrderByUserId(String userId) {
+    public List<Order> getOrderByUserId(UUID userId) {
         return this.orderRepository.findByUserId(userId);
     }
 
     public void checkStockBeforeOrder(List<OrderItemRequest> items) {
         for (OrderItemRequest item : items) {
+            UUID productId = UUID.fromString(item.getProductId());
+
             boolean isAvailable = this.inventoryService.isAvailable(
-                    item.getProductId(),
+                    productId,
                     item.getQuantity());
             if (!isAvailable) {
-                throw new InsufficientStock(item.getProductId());
+                throw new InsufficientStock(productId);
             }
         }
     }
@@ -54,7 +57,7 @@ public class OrderService {
         return subtotal - discount + shippingFee;
     }
 
-    public Order createOrder(String userId, OrderCreateRequest request) {
+    public Order createOrder(UUID userId, OrderCreateRequest request) {
         this.checkStockBeforeOrder(request.getOrderItems());
 
         Order order = new Order();
@@ -65,7 +68,7 @@ public class OrderService {
         List<OrderItem> orderItems = request.getOrderItems().stream().map(orderItem -> {
             OrderItem newOrderItem = new OrderItem();
             newOrderItem.setOrder(order);
-            newOrderItem.setProduct(this.productService.getProductById(orderItem.getProductId()));
+            newOrderItem.setProduct(this.productService.getProductById(UUID.fromString(orderItem.getProductId())));
             newOrderItem.setQuantity(orderItem.getQuantity());
             newOrderItem.setPrice(orderItem.getPrice());
 
@@ -77,7 +80,7 @@ public class OrderService {
         order.setOrderItems(orderItems);
         order.setSubtotal(subtotal);
         // - Số tiền giảm giá
-        Coupon coupon = this.couponService.getCouponById(request.getCouponId());
+        Coupon coupon = this.couponService.getCouponById(UUID.fromString(request.getCouponId()));
         Double discount = this.couponService.calculateDiscount(
                 coupon.getType().getValue(),
                 coupon.getDiscount(),
@@ -90,15 +93,17 @@ public class OrderService {
         order.setTotalPrice(this.calculateOrderTotal(subtotal, discount, request.getShippingFee()));
 
         request.getOrderItems().forEach(
-                i -> this.inventoryService.decreaseStock(i.getProductId(), i.getQuantity()));
+                orderItem -> this.inventoryService.decreaseStock(UUID.fromString(orderItem.getProductId()),
+                        orderItem.getQuantity()));
 
         return this.orderRepository.save(order);
     }
 
     public Order cancelOrder(OrderCancelRequest request) {
-        Order order = this.getOrderById(request.getOrderId());
+        UUID orderId = UUID.fromString(request.getOrderId());
+        Order order = this.getOrderById(orderId);
         if (order.getStatus().equals(OrderStatusEnum.CANCELLED)) {
-            throw new OrderAlreadyCancelled(request.getOrderId());
+            throw new OrderAlreadyCancelled(orderId);
         }
 
         order.getOrderItems().forEach(
