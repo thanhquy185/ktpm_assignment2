@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: shopcart-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/shopcart
+    username: admin
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+logging:
+  level:
+    root: INFO
+    com.shopcart: DEBUG
+    org.springframework.security: DEBUG
+
+# jackson:
+#   serialization:
+#     write-dates-as-timestamps: false
