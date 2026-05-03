@@ -6,10 +6,14 @@ import com.shopcart.dtos.request.OrderItemRequest;
 import com.shopcart.entities.Coupon;
 import com.shopcart.entities.Order;
 import com.shopcart.entities.OrderItem;
+import com.shopcart.entities.Product;
 import com.shopcart.enums.OrderStatusEnum;
 import com.shopcart.exceptions.InsufficientStock;
 import com.shopcart.exceptions.OrderAlreadyCancelled;
+import com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero;
+import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.OrderNotFound;
+import com.shopcart.exceptions.ProductNotFoundInInventory;
 import com.shopcart.repositories.OrderRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -40,15 +44,26 @@ public class OrderService {
         return this.orderRepository.findByUserId(userId);
     }
 
-    public void checkStockBeforeOrder(List<OrderItemRequest> items) {
-        for (OrderItemRequest item : items) {
-            UUID productId = UUID.fromString(item.getProductId());
+    public void checkQuantityAndPriceBeforeOrder(List<OrderItemRequest> orderItems) {
+        orderItems.stream().forEach(orderItem -> {
+            if (orderItem.getQuantity() <= 0) {
+                throw new OrderItemQuantityGreaterThanZero();
+            }
+            if (orderItem.getPrice() < 0) {
+                throw new OrderItemPriceGreaterThanOrEqualZero();
+            }
+        });
+    }
 
-            boolean isAvailable = this.inventoryService.isAvailable(
-                    productId,
-                    item.getQuantity());
-            if (!isAvailable) {
-                throw new InsufficientStock(productId);
+    public void checkStockBeforeOrder(List<OrderItemRequest> orderItems) {
+        for (OrderItemRequest orderItem : orderItems) {
+            Product product = this.productService.getProductById(
+                    UUID.fromString(orderItem.getProductId()));
+            if (product.getInventory() == null) {
+                throw new ProductNotFoundInInventory(product.getId());
+            }
+            if (orderItem.getQuantity() > product.getInventory().getStock()) {
+                throw new InsufficientStock(product.getId());
             }
         }
     }
@@ -58,6 +73,7 @@ public class OrderService {
     }
 
     public Order createOrder(UUID userId, OrderCreateRequest request) {
+        this.checkQuantityAndPriceBeforeOrder(request.getOrderItems());
         this.checkStockBeforeOrder(request.getOrderItems());
 
         Order order = new Order();

@@ -1,4 +1,4 @@
-# 📘 Git Branch + Conventional Commits (bản dễ hiểu)
+# 📘 Git Branch + Conventional Commits
 
 ## 1. Git Branch (làm nhóm)
 

@@ -21,7 +21,7 @@ public class ProductController {
         private final ProductService productService;
 
         @GetMapping("")
-        public ResponseEntity<?> getProducts() {
+        public ResponseEntity<?> getAllProduct() {
                 List<Product> products = this.productService.getAllProduct();
 
                 RestResponse<List<Product>> restResponse = RestResponse.<List<Product>>builder()

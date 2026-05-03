@@ -10,6 +10,7 @@ import com.shopcart.exceptions.CartItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.CartNotFound;
 import com.shopcart.exceptions.InsufficientStock;
 import com.shopcart.exceptions.ProductNotFound;
+import com.shopcart.exceptions.ProductNotFoundInInventory;
 import com.shopcart.exceptions.UserNotFoundInCart;
 import com.shopcart.services.CartService;
 import com.shopcart.utils.ValidationUtil;
@@ -32,7 +33,7 @@ public class CartController {
         private final CartService cartService;
 
         @GetMapping("")
-        public ResponseEntity<?> getCarts() {
+        public ResponseEntity<?> getAllCart() {
                 List<Cart> carts = this.cartService.getAllCart();
 
                 RestResponse<List<Cart>> restResponse = RestResponse.<List<Cart>>builder()
@@ -199,6 +200,17 @@ public class CartController {
                 RestResponse<Object> restResponse = RestResponse.builder()
                                 .status(HttpStatus.NOT_FOUND.value())
                                 .error("PRODUCT_NOT_FOUND")
+                                .message(e.getMessage())
+                                .build();
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restResponse);
+        }
+
+        @ExceptionHandler(ProductNotFoundInInventory.class)
+        public ResponseEntity<?> handleProductNotFoundInInventory(ProductNotFoundInInventory e) {
+                RestResponse<Object> restResponse = RestResponse.builder()
+                                .status(HttpStatus.NOT_FOUND.value())
+                                .error("PRODUCT_NOT_FOUND_IN_INVENTORY")
                                 .message(e.getMessage())
                                 .build();
 

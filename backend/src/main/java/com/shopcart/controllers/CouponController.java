@@ -28,7 +28,7 @@ public class CouponController {
     private final CouponService couponService;
 
     @GetMapping("")
-    public ResponseEntity<?> getCoupons() {
+    public ResponseEntity<?> getAllCoupon() {
         List<Coupon> coupons = this.couponService.getAllCoupon();
 
         RestResponse<List<Coupon>> restResponse = RestResponse.<List<Coupon>>builder()

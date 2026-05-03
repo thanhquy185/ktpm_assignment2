@@ -10,13 +10,11 @@ import jakarta.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrderItemRequest {
+public class InventoryItemRequest {
     @NotNull(message = "Product ID is required!")
     private String productId;
 
     @NotNull(message = "Quantity is required!")
     private Long quantity;
 
-    @NotNull(message = "Price is required!")
-    private Long price;
 }

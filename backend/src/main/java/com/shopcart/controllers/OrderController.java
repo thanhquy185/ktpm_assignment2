@@ -7,7 +7,10 @@ import com.shopcart.entities.Order;
 import com.shopcart.exceptions.CouponNotFound;
 import com.shopcart.exceptions.InsufficientStock;
 import com.shopcart.exceptions.InvalidInventoryQuantity;
+// import com.shopcart.exceptions.InvalidInventoryQuantity;
 import com.shopcart.exceptions.OrderAlreadyCancelled;
+import com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero;
+import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.OrderNotFound;
 import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.exceptions.ProductNotFoundInInventory;
@@ -33,7 +36,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @GetMapping("")
-    public ResponseEntity<?> getOrders() {
+    public ResponseEntity<?> getAllOrder() {
         List<Order> orders = this.orderService.getAllOrder();
 
         RestResponse<List<Order>> restResponse = RestResponse.<List<Order>>builder()
@@ -122,6 +125,28 @@ public class OrderController {
                 .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restResponse);
+    }
+
+    @ExceptionHandler(OrderItemQuantityGreaterThanZero.class)
+    public ResponseEntity<?> handleOrderItemQuantityGreaterThanZero(OrderItemQuantityGreaterThanZero e) {
+        RestResponse<Object> restResponse = RestResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("ORDER_ITEM_QUANTITY_GREATER_THAN_ZERO")
+                .message(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
+    }
+
+    @ExceptionHandler(OrderItemPriceGreaterThanOrEqualZero.class)
+    public ResponseEntity<?> handleOrderItemPriceGreaterThanOrEqualZero(OrderItemPriceGreaterThanOrEqualZero e) {
+        RestResponse<Object> restResponse = RestResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("ORDER_ITEM_PRICE_GREATER_THAN_OR_EQUAL_ZERO")
+                .message(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
     }
 
     @ExceptionHandler(InsufficientStock.class)

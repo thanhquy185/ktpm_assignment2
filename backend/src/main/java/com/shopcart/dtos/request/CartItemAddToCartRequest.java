@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Min;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,6 +19,5 @@ public class CartItemAddToCartRequest {
     private String productId;
 
     @NotNull(message = "Quantity is required!")
-    @Min(value = 1, message = "Quantity must be at least 1!")
     private Long quantity;
 }

@@ -10,6 +10,7 @@ import com.shopcart.exceptions.CartItemNotFound;
 import com.shopcart.exceptions.CartItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.CartNotFound;
 import com.shopcart.exceptions.InsufficientStock;
+import com.shopcart.exceptions.ProductNotFoundInInventory;
 import com.shopcart.exceptions.UserNotFoundInCart;
 import com.shopcart.repositories.CartItemRepository;
 import com.shopcart.repositories.CartRepository;
@@ -44,14 +45,15 @@ public class CartService {
     }
 
     private Cart getOrCreateCart(UUID userId) {
-        Cart cart = this.cartRepository.findByUserId(userId).orElseGet(() -> {
-            return Cart.builder()
+        Cart cart = this.cartRepository.findByUserId(userId).orElse(null);
+        if (cart == null) {
+            Cart newCart = Cart.builder()
                     .user(this.userService.getUserById(userId))
                     .totalQuantity(0L)
                     .totalPrice(0L)
                     .build();
-        });
-        cart = this.cartRepository.save(cart);
+            cart = this.cartRepository.save(newCart);
+        }
 
         return cart;
     }
@@ -60,7 +62,7 @@ public class CartService {
         Long totalQuantity = this.cartItemRepository.sumQuantity(cartId);
         Long totalPrice = this.cartItemRepository.sumPrice(cartId);
 
-        Cart cart = getCartById(cartId);
+        Cart cart = this.getCartById(cartId);
         cart.setTotalQuantity(totalQuantity != null ? totalQuantity : 0L);
         cart.setTotalPrice(totalPrice != null ? totalPrice : 0L);
 
@@ -71,6 +73,9 @@ public class CartService {
         Product product = this.productService.getProductById(UUID.fromString(request.getProductId()));
         if (request.getQuantity() <= 0) {
             throw new CartItemQuantityGreaterThanZero();
+        }
+        if (product.getInventory() == null) {
+            throw new ProductNotFoundInInventory(product.getId());
         }
         if (request.getQuantity() > product.getInventory().getStock()) {
             throw new InsufficientStock(product.getId());
@@ -108,6 +113,9 @@ public class CartService {
         if (request.getQuantity() <= 0) {
             throw new CartItemQuantityGreaterThanZero();
         }
+        if (product.getInventory() == null) {
+            throw new ProductNotFoundInInventory(product.getId());
+        }
         if (request.getQuantity() > product.getInventory().getStock()) {
             throw new InsufficientStock(product.getId());
         }
@@ -125,11 +133,11 @@ public class CartService {
     }
 
     public CartItem removeFromCart(UUID userId, CartItemRemoveFromCartRequest request) {
-        UUID productId = UUID.fromString(request.getProductId());
+        Product product = this.productService.getProductById(UUID.fromString(request.getProductId()));
         Cart cart = this.getCartByUserId(userId);
         CartItem cartItemDeleted = this.cartItemRepository
-                .findByCartIdAndProductId(cart.getId(), productId)
-                .orElseThrow(() -> new CartItemNotFound(cart.getId(), productId));
+                .findByCartIdAndProductId(cart.getId(), product.getId())
+                .orElseThrow(() -> new CartItemNotFound(cart.getId(), product.getId()));
         this.cartItemRepository.delete(cartItemDeleted);
 
         this.updateCartTotal(cart.getId());

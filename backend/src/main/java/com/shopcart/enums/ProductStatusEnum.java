@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ProductStatusEnum {
     ACTIVE("ACTIVE", "Đang bán"),
-    INACTIVE("INACTIVE", "Ngừng bán"),
-    OUT_OF_STOCK("OUT_OF_STOCK", "Hết hàng");
+    INACTIVE("INACTIVE", "Ngừng bán");
 
     private final String value;
     private final String description;
