@@ -158,13 +158,13 @@ Coverage ≥ 85% cho OrderService
 
 - TC1_COT: Tính tổng tiền đơn hàng thành công
 
-##### createOrder()
+##### createOrder() ✅ DONE (Danh Thị Ngọc Châu)
 
-- TC1_CO: Tạo đơn hàng thành công
-- TC2_CO: Tạo đơn hàng nhưng sản phẩm không tồn tại
-- TC3_CO: Tạo đơn hàng nhưng số lượng sản phẩm bé hơn hoặc bằng 0
-- TC4_CO: Tạo đơn hàng nhưng giá bán sản phẩm bé hơn hoặc bằng 0
-- TC5_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại
+- TC1_CO: Tạo đơn hàng thành công ✅
+- TC2_CO: Tạo đơn hàng nhưng sản phẩm không tồn tại ✅
+- TC3_CO: Tạo đơn hàng nhưng số lượng sản phẩm bé hơn hoặc bằng 0 ✅
+- TC4_CO: Tạo đơn hàng nhưng giá bán sản phẩm bé hơn hoặc bằng 0 ✅
+- TC5_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại 
 - TC6_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
 - TC7_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
 - TC8_CO: Tạo đơn hàng nhưng người dùng không tồn tại
@@ -212,7 +212,7 @@ Test CORS và headers (không tính điểm riêng, dùng để hoàn thiện b�
 
 #### Các endpoint
 
-- POST /api/carts/user/{userId}
+- POST /api/carts/user/{userId} ✅ DONE (Danh Thị Ngọc Châu)
 
 ### OrderController + InventoryController
 
@@ -235,7 +235,7 @@ Các endpoint còn lại được khuyến khích triển khai thêm để hoàn
 | Thành viên           | Controller | Method | Endpoint                 |
 | -------------------- | :--------: | :----: | ------------------------ |
 | Trần Thanh Quy       | Inventory  |  POST  | /api/inventories         |
-| Danh Thị Ngọc Châu   |    Cart    |  POST  | /api/carts/user/{userId} |
+| Danh Thị Ngọc Châu   |    Cart    |  POST  | /api/carts/user/{userId} | ✅ DONE |
 | Đỗ Nhật Huy          |   Order    | DELETE | /api/orders              |
 | Nguyễn Đình Quốc Huy |   Order    |  POST  | /api/orders              |
 
@@ -265,7 +265,7 @@ Verify mock interactions và kiểm tra phản hồi trả về từ controller 
 - GET /api/carts/{id}
 - GET /api/carts/user/{userId}
 - POST /api/carts/user/{userId}
-- PUT /api/carts/user/{userId}
+- PUT /api/carts/user/{userId} ✅ DONE (Danh Thị Ngọc Châu)
 - DELETE /api/carts/user/{userId}
 
 #### Phân công
@@ -275,7 +275,7 @@ Verify mock interactions và kiểm tra phản hồi trả về từ controller 
 | Trần Thanh Quy       |  GET   | /api/carts               |
 | Trần Thanh Quy       |  GET   | /api/carts/{id}          |
 | Trần Thanh Quy       |  GET   | /api/carts/user/{userId} |
-| Danh Thị Ngọc Châu   |  PUT   | /api/carts/user/{userId} |
+| Danh Thị Ngọc Châu   |  PUT   | /api/carts/user/{userId} | ✅ DONE |
 | Đỗ Nhật Huy          |  POST  | /api/carts/user/{userId} |
 | Nguyễn Đình Quốc Huy | DELETE | /api/carts/user/{userId} |
 
@@ -298,7 +298,7 @@ Verify repository interactions và kiểm tra dữ liệu sau khi service xử l
 - checkQuantityAndPriceBeforeOrder()
 - checkStockBeforeOrder()
 - calculateOrderTotal()
-- createOrder()
+- createOrder() ✅ DONE (Danh Thị Ngọc Châu)
 - cancelOrder()
 
 #### Phân công
@@ -308,7 +308,7 @@ Verify repository interactions và kiểm tra dữ liệu sau khi service xử l
 | Trần Thanh Quy       | checkQuantityAndPriceBeforeOrder() |
 | Trần Thanh Quy       | checkStockBeforeOrder()            |
 | Trần Thanh Quy       | calculateOrderTotal()              |
-| Danh Thị Ngọc Châu   | createOrder()                      |
+| Danh Thị Ngọc Châu   | createOrder()                      | ✅ DONE |
 | Đỗ Nhật Huy          | cancelOrder()                      |
 | Nguyễn Đình Quốc Huy | getOrders()                        |
 | Nguyễn Đình Quốc Huy | getOrderById()                     |
