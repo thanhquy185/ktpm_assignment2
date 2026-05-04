@@ -25,7 +25,10 @@ import com.shopcart.entities.Cart;
 import com.shopcart.entities.CartItem;
 import com.shopcart.entities.Product;
 import com.shopcart.exceptions.CartItemNotFound;
+import com.shopcart.exceptions.CartItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.InsufficientStock;
+import com.shopcart.exceptions.ProductNotFound;
+import com.shopcart.exceptions.ProductNotFoundInInventory;
 import com.shopcart.exceptions.UserNotFound;
 import com.shopcart.exceptions.UserNotFoundInCart;
 import com.shopcart.repositories.CartItemRepository;
@@ -226,5 +229,150 @@ public class CartServiceUnitTest {
                                 .findByUserId(userId);
                 verify(this.cartItemRepository, times(1))
                                 .findByCartIdAndProductId(cart.getId(), product.getId());
+        }
+
+        @Test
+        @DisplayName("TC1_UQ: Cập nhật sản phẩm thành công")
+        void test_UpdateQuantity_Successful() {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                Cart cart = this.fakeDataForTest.getCartFake1();
+                CartItem cartItem = this.fakeDataForTest.getCartItemFake1();
+                CartItemUpdateQuantityRequest request = CartItemUpdateQuantityRequest.builder()
+                                .productId(productId.toString())
+                                .quantity(3L)
+                                .build();
+
+                when(this.productService.getProductById(UUID.fromString(request.getProductId())))
+                                .thenReturn(product);
+                when(this.cartRepository.findByUserId(userId))
+                                .thenReturn(Optional.of(cart));
+                when(this.cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()))
+                                .thenReturn(Optional.of(cartItem));
+                when(this.cartItemRepository.save(any(CartItem.class)))
+                                .thenAnswer(i -> i.getArgument(0));
+                when(this.cartItemRepository.sumQuantity(cart.getId()))
+                                .thenReturn(3L);
+                when(this.cartItemRepository.sumPrice(cart.getId()))
+                                .thenReturn(product.getPrice() * 3L);
+                when(this.cartRepository.findById(cart.getId()))
+                                .thenReturn(Optional.of(cart));
+                when(this.cartRepository.save(any(Cart.class)))
+                                .thenAnswer(i -> i.getArgument(0));
+
+                CartItem cartItemUpdated = this.cartService.updateQuantity(userId, request);
+                assertNotNull(cartItemUpdated);
+                assertEquals(cartItem.getId(), cartItemUpdated.getId());
+                assertEquals(product, cartItemUpdated.getProduct());
+                assertEquals(3L, cartItemUpdated.getQuantity());
+                assertEquals(product.getPrice(), cartItemUpdated.getPrice());
+
+                verify(this.productService, times(1))
+                                .getProductById(UUID.fromString(request.getProductId()));
+                verify(this.cartRepository, times(1))
+                                .findByUserId(userId);
+                verify(this.cartItemRepository, times(1))
+                                .findByCartIdAndProductId(cart.getId(), product.getId());
+                verify(this.cartItemRepository, times(1))
+                                .save(any(CartItem.class));
+                verify(this.cartItemRepository, times(1))
+                                .sumQuantity(cart.getId());
+                verify(this.cartItemRepository, times(1))
+                                .sumPrice(cart.getId());
+                verify(this.cartRepository, times(1))
+                                .findById(cart.getId());
+                verify(this.cartRepository, times(1))
+                                .save(any(Cart.class));
+        }
+
+        @Test
+        @DisplayName("TC2_UQ: Sản phẩm không tồn tại")
+        void test_UpdateQuantity_ProductNotFound() throws ProductNotFound {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                CartItemUpdateQuantityRequest request = CartItemUpdateQuantityRequest.builder()
+                                .productId(productId.toString())
+                                .quantity(2L)
+                                .build();
+
+                when(this.productService.getProductById(UUID.fromString(request.getProductId())))
+                                .thenThrow(new ProductNotFound(UUID.fromString(request.getProductId())));
+
+                assertThrows(ProductNotFound.class, () -> {
+                        this.cartService.updateQuantity(userId, request);
+                });
+
+                verify(this.productService, times(1))
+                                .getProductById(UUID.fromString(request.getProductId()));
+        }
+
+        @Test
+        @DisplayName("TC3_UQ: Số lượng ≤ 0")
+        void test_UpdateQuantity_InvalidQuantity() throws CartItemQuantityGreaterThanZero {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                CartItemUpdateQuantityRequest request = CartItemUpdateQuantityRequest.builder()
+                                .productId(productId.toString())
+                                .quantity(0L)
+                                .build();
+
+                when(this.productService.getProductById(UUID.fromString(request.getProductId())))
+                                .thenReturn(product);
+
+                assertThrows(CartItemQuantityGreaterThanZero.class, () -> {
+                        this.cartService.updateQuantity(userId, request);
+                });
+
+                verify(this.productService, times(1))
+                                .getProductById(UUID.fromString(request.getProductId()));
+        }
+
+        @Test
+        @DisplayName("TC4_UQ: Tồn kho không tồn tại")
+        void test_UpdateQuantity_InventoryNotFound() throws ProductNotFoundInInventory {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                CartItemUpdateQuantityRequest request = CartItemUpdateQuantityRequest.builder()
+                                .productId(productId.toString())
+                                .quantity(2L)
+                                .build();
+
+                // Set inventory to null to simulate no inventory
+                product.setInventory(null);
+
+                when(this.productService.getProductById(UUID.fromString(request.getProductId())))
+                                .thenReturn(product);
+
+                assertThrows(ProductNotFoundInInventory.class, () -> {
+                        this.cartService.updateQuantity(userId, request);
+                });
+
+                verify(this.productService, times(1))
+                                .getProductById(UUID.fromString(request.getProductId()));
+        }
+
+        @Test
+        @DisplayName("TC5_UQ: Tồn kho không đủ")
+        void test_UpdateQuantity_InsufficientStock() throws InsufficientStock {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                CartItemUpdateQuantityRequest request = CartItemUpdateQuantityRequest.builder()
+                                .productId(productId.toString())
+                                .quantity(100L) // More than available stock
+                                .build();
+
+                when(this.productService.getProductById(UUID.fromString(request.getProductId())))
+                                .thenReturn(product);
+
+                assertThrows(InsufficientStock.class, () -> {
+                        this.cartService.updateQuantity(userId, request);
+                });
+
+                verify(this.productService, times(1))
+                                .getProductById(UUID.fromString(request.getProductId()));
         }
 }

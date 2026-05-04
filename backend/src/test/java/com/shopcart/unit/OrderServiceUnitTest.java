@@ -22,24 +22,35 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.shopcart.FakeDataForTest;
 import com.shopcart.dtos.request.OrderItemRequest;
+import com.shopcart.dtos.request.OrderCreateRequest;
+import com.shopcart.entities.Coupon;
 import com.shopcart.entities.Order;
 import com.shopcart.entities.Product;
+import com.shopcart.enums.OrderPaymentMethodEnum;
+import com.shopcart.enums.OrderShippingMethodEnum;
 import com.shopcart.exceptions.InsufficientStock;
+import com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero;
+import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.OrderNotFound;
 import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.exceptions.ProductNotFoundInInventory;
 import com.shopcart.repositories.OrderRepository;
+import com.shopcart.services.CartService;
 import com.shopcart.services.CouponService;
 import com.shopcart.services.InventoryService;
 import com.shopcart.services.OrderService;
 import com.shopcart.services.ProductService;
 import com.shopcart.services.UserService;
 
+import java.time.LocalDate;
+
 @DisplayName("Cart Service Unit Tests")
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceUnitTest {
         @Mock
         private UserService userService;
+        @Mock
+        private CartService cartService;
         @Mock
         private CouponService couponService;
         @Mock
@@ -196,5 +207,142 @@ public class OrderServiceUnitTest {
                 Double result = this.orderService.calculateOrderTotal(subtotal, discount, shippingFee);
                 assertNotNull(result);
                 assertEquals(expected, result);
+        }
+
+        @Test
+        @DisplayName("TC1_CO: Tạo đơn thành công")
+        void test_CreateOrder_Successful() {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(null)
+                                .shippingAddress("Trường Đại học Sài Gọn")
+                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
+                                .shippingFee(10000L)
+                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(2L)
+                                                                .price(30000000L)
+                                                                .build()))
+                                .build();
+
+                Order expectedOrder = Order.builder()
+                                .id(UUID.randomUUID())
+                                .user(this.fakeDataForTest.getUserFake1())
+                                .shippingAddress("Trường Đại học Sài Gọn")
+                                .subtotal(60000000L)
+                                .shippingFee(10000L)
+                                .discount(0D)
+                                .totalPrice(60010000D)
+                                .build();
+
+                when(this.productService.getProductById(productId))
+                                .thenReturn(product);
+                when(this.userService.getUserById(userId))
+                                .thenReturn(this.fakeDataForTest.getUserFake1());
+                when(this.orderRepository.save(any(Order.class)))
+                                .thenReturn(expectedOrder);
+
+                Order createdOrder = this.orderService.createOrder(request);
+
+                assertNotNull(createdOrder);
+                assertEquals(expectedOrder.getId(), createdOrder.getId());
+                assertEquals(expectedOrder.getShippingAddress(), createdOrder.getShippingAddress());
+                assertEquals(expectedOrder.getSubtotal(), createdOrder.getSubtotal());
+                assertEquals(expectedOrder.getShippingFee(), createdOrder.getShippingFee());
+
+                verify(this.productService, times(2)).getProductById(productId);
+                verify(this.userService, times(1)).getUserById(userId);
+                verify(this.inventoryService, times(1)).decreaseStock(productId, 2L);
+                verify(this.cartService, times(1)).clearCart(userId);
+                verify(this.orderRepository, times(1)).save(any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC2_CO: Sản phẩm không tồn tại")
+        void test_CreateOrder_ButProductNotFound() throws ProductNotFound {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(null)
+                                .shippingAddress("Trường Đại học Sài Gọn")
+                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
+                                .shippingFee(10000L)
+                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(2L)
+                                                                .price(30000000L)
+                                                                .build()))
+                                .build();
+
+                when(this.productService.getProductById(productId))
+                                .thenThrow(new ProductNotFound(productId));
+
+                assertThrows(ProductNotFound.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.productService, times(1)).getProductById(productId);
+        }
+
+        @Test
+        @DisplayName("TC3_CO: Số lượng ≤ 0")
+        void test_CreateOrder_ButQuantityLessThanOrEqualZero() throws OrderItemQuantityGreaterThanZero {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(null)
+                                .shippingAddress("Trường Đại học Sài Gọn")
+                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
+                                .shippingFee(10000L)
+                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(0L)
+                                                                .price(30000000L)
+                                                                .build()))
+                                .build();
+
+                assertThrows(OrderItemQuantityGreaterThanZero.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+        }
+
+        @Test
+        @DisplayName("TC4_CO: Giá ≤ 0")
+        void test_CreateOrder_ButPriceLessThanZero() throws OrderItemPriceGreaterThanOrEqualZero {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(null)
+                                .shippingAddress("Trường Đại học Sài Gọn")
+                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
+                                .shippingFee(10000L)
+                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(2L)
+                                                                .price(-1000L)
+                                                                .build()))
+                                .build();
+
+                assertThrows(OrderItemPriceGreaterThanOrEqualZero.class, () -> {
+                        this.orderService.createOrder(request);
+                });
         }
 }
