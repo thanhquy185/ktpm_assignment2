@@ -345,4 +345,138 @@ public class OrderServiceUnitTest {
                         this.orderService.createOrder(request);
                 });
         }
+
+        @Test
+        @DisplayName("TC5_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại")
+        void test_CreateOrder_ButProductNotFoundInInventory() throws ProductNotFoundInInventory {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                product.setInventory(null);
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(null)
+                                .shippingAddress("Trường Đại học Sài Gọn")
+                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
+                                .shippingFee(10000L)
+                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(2L)
+                                                                .price(30000000L)
+                                                                .build()))
+                                .build();
+
+                when(this.productService.getProductById(productId))
+                                .thenReturn(product);
+
+                assertThrows(ProductNotFoundInInventory.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.productService, times(1)).getProductById(productId);
+                verify(this.orderRepository, times(0)).save(any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC6_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại (Lỗi ProductNotFound)")
+        void test_CreateOrder_ButProductNotFoundInStockCheck() throws ProductNotFound {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(null)
+                                .shippingAddress("Trường Đại học Sài Gọn")
+                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
+                                .shippingFee(10000L)
+                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(2L)
+                                                                .price(30000000L)
+                                                                .build()))
+                                .build();
+
+                when(this.productService.getProductById(productId))
+                                .thenThrow(new ProductNotFound(productId));
+
+                assertThrows(ProductNotFound.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.productService, times(1)).getProductById(productId);
+                verify(this.orderRepository, times(0)).save(any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC7_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho)")
+        void test_CreateOrder_ButInsufficientStock() throws InsufficientStock {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(null)
+                                .shippingAddress("Trường Đại học Sài Gọn")
+                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
+                                .shippingFee(10000L)
+                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(99L) 
+                                                                .price(30000000L)
+                                                                .build()))
+                                .build();
+
+                when(this.productService.getProductById(productId))
+                                .thenReturn(product);
+
+                assertThrows(InsufficientStock.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.productService, times(1)).getProductById(productId);
+                verify(this.orderRepository, times(0)).save(any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC8_CO: Tạo đơn hàng nhưng người dùng không tồn tại")
+        void test_CreateOrder_ButUserNotFound() throws com.shopcart.exceptions.UserNotFound {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(null)
+                                .shippingAddress("Trường Đại học Sài Gọn")
+                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
+                                .shippingFee(10000L)
+                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(2L)
+                                                                .price(30000000L)
+                                                                .build()))
+                                .build();
+
+                when(this.productService.getProductById(productId))
+                                .thenReturn(product);
+                when(this.userService.getUserById(userId))
+                                .thenThrow(new com.shopcart.exceptions.UserNotFound(userId));
+
+                assertThrows(com.shopcart.exceptions.UserNotFound.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.userService, times(1)).getUserById(userId);
+                verify(this.orderRepository, times(0)).save(any(Order.class));
+        }
 }

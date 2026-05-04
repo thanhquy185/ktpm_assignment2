@@ -109,12 +109,12 @@ Coverage ≥ 85% cho CartService
 - TC6_UQ: Cập nhật sản phẩm nhưng giỏ hàng của người dùng không tồn tại
 - TC7_UQ: Cập nhật sản phẩm nhưng sản phẩm không tồn tại trong giỏ
 
-##### removeFromCart()
-
-- TC1_RFC: Xoá sản phẩm thành công
-- TC2_RFC: Xoá sản phẩm nhưng sản phẩm không tồn tại
-- TC3_RFC: Xoá sản phẩm nhưng giỏ hàng của người dùng không tồn tại
-- TC4_RFC: Xoá sản phẩm nhưng sản phẩm không tồn tại trong giỏ
+##### removeFromCart() Done ✅ (Nguyễn Đình Quốc Huy)
+Huy
+- TC1_RFC: Xoá sản phẩm thành công ✅
+- TC2_RFC: Xoá sản phẩm nhưng sản phẩm không tồn tại ✅ 
+- TC3_RFC: Xoá sản phẩm nhưng giỏ hàng của người dùng không tồn tại ✅
+- TC4_RFC: Xoá sản phẩm nhưng sản phẩm không tồn tại trong giỏ ✅
 
 #### Phân công
 
@@ -124,7 +124,7 @@ Coverage ≥ 85% cho CartService
 | Trần Thanh Quy       | updateQuantity() | TC6 → TC7 |
 | Danh Thị Ngọc Châu   | updateQuantity() | TC1 → TC5 |
 | Đỗ Nhật Huy          | addToCart()      | TC1 → TC5 |
-| Nguyễn Đình Quốc Huy | removeFromCart() | TC1 → TC4 |
+| Nguyễn Đình Quốc Huy | removeFromCart() | TC1 → TC4 | ✅
 
 ### OrderService
 
@@ -156,18 +156,18 @@ Coverage ≥ 85% cho OrderService
 
 ##### calculateOrderTotal()
 
-- TC1_COT: Tính tổng tiền đơn hàng thành công
+- TC1_COT: Tính tổng tiền đơn hàng thành cHuy
 
-##### createOrder() ✅ DONE (Danh Thị Ngọc Châu)
-
+##### createOrder() ✅ DONE (Danh Thị Ngọc Châu) (Nguyễn Đình Quốc Huy)
+                        
 - TC1_CO: Tạo đơn hàng thành công ✅
 - TC2_CO: Tạo đơn hàng nhưng sản phẩm không tồn tại ✅
 - TC3_CO: Tạo đơn hàng nhưng số lượng sản phẩm bé hơn hoặc bằng 0 ✅
 - TC4_CO: Tạo đơn hàng nhưng giá bán sản phẩm bé hơn hoặc bằng 0 ✅
-- TC5_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại 
-- TC6_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
-- TC7_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
-- TC8_CO: Tạo đơn hàng nhưng người dùng không tồn tại
+- TC5_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại ✅
+- TC6_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại✅
+- TC7_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)✅
+- TC8_CO: Tạo đơn hàng nhưng người dùng không tồn tại✅
 - TC9_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại
 - TC10_CO: Tạo đơn hàng nhưng mã giảm giá hết hạn
 
@@ -188,7 +188,7 @@ Coverage ≥ 85% cho OrderService
 | Trần Thanh Quy       | createOrder()           | TC9 → TC10 |
 | Danh Thị Ngọc Châu   | createOrder()           | TC1 → TC4  |
 | Đỗ Nhật Huy          | cancelOrder()           | TC1 → TC4  |
-| Nguyễn Đình Quốc Huy | createOrder()           | TC5 → TC8  |
+| Nguyễn Đình Quốc Huy | createOrder()           | TC5 → TC8  | ✅
 
 ---
 
