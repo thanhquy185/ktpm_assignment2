@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.shopcart.FakeDataForTest;
 import com.shopcart.dtos.request.CartItemAddToCartRequest;
+import com.shopcart.dtos.request.CartItemRemoveFromCartRequest;
 import com.shopcart.dtos.request.CartItemUpdateQuantityRequest;
 import com.shopcart.entities.Cart;
 import com.shopcart.entities.CartItem;
@@ -374,5 +375,133 @@ public class CartServiceUnitTest {
 
                 verify(this.productService, times(1))
                                 .getProductById(UUID.fromString(request.getProductId()));
+        }
+
+        @Test
+        @DisplayName("TC1_RFC: Xóa sản phẩm thành công")
+        void test_RemoveFromCart_Successful() {
+                // Lấy dữ liệu giả từ FakeDataForTest 
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                Cart cart = this.fakeDataForTest.getCartFake1();
+                CartItem cartItem = this.fakeDataForTest.getCartItemFake1();
+                
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(productId.toString())
+                                .build();
+
+                //Giả lập các hàm get để tìm được dữ liệu
+                when(this.productService.getProductById(UUID.fromString(request.getProductId())))
+                                .thenReturn(product);
+                when(this.cartRepository.findByUserId(userId))
+                                .thenReturn(Optional.of(cart));
+                when(this.cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()))
+                                .thenReturn(Optional.of(cartItem));
+                                
+                //Giả lập dữ liệu cho hàm updateCartTotal bên trong
+                when(this.cartItemRepository.sumQuantity(cart.getId())).thenReturn(0L);
+                when(this.cartItemRepository.sumPrice(cart.getId())).thenReturn(0L);
+                when(this.cartRepository.findById(cart.getId())).thenReturn(Optional.of(cart));
+
+                // Chạy hàm cần test
+                CartItem result = this.cartService.removeFromCart(userId, request);
+
+                // Kiểm tra kết quả trả về có chuẩn không
+                assertNotNull(result);
+                assertEquals(cartItem.getId(), result.getId());
+
+                verify(this.cartItemRepository, times(1)).delete(cartItem);
+                verify(this.productService, times(1)).getProductById(UUID.fromString(request.getProductId()));
+                verify(this.cartRepository, times(1)).findByUserId(userId);
+                verify(this.cartItemRepository, times(1)).findByCartIdAndProductId(cart.getId(), product.getId());
+                verify(this.cartItemRepository, times(1)).sumQuantity(cart.getId());
+                verify(this.cartItemRepository, times(1)).sumPrice(cart.getId());
+                verify(this.cartRepository, times(1)).findById(cart.getId());
+        }
+
+        @Test
+        @DisplayName("TC2_RFC: Xóa sản phẩm nhưng sản phẩm không tồn tại")
+        void test_RemoveFromCart_ProductNotFound() throws ProductNotFound {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(productId.toString())
+                                .build();
+
+                // Giả lập văng lỗi ProductNotFound ngay từ bước lấy sản phẩm
+                when(this.productService.getProductById(UUID.fromString(request.getProductId())))
+                                .thenThrow(new ProductNotFound(UUID.fromString(request.getProductId())));
+
+                // Kiểm tra xem hàm removeFromCart có quăng lỗi đó ra không
+                assertThrows(ProductNotFound.class, () -> {
+                        this.cartService.removeFromCart(userId, request);
+                });
+
+                // Xác nhận hàm lấy sản phẩm có được gọi 1 lần
+                verify(this.productService, times(1))
+                                .getProductById(UUID.fromString(request.getProductId()));
+        }
+
+        @Test
+        @DisplayName("TC3_RFC: Xóa sản phẩm nhưng giỏ hàng của người dùng không tồn tại")
+        void test_RemoveFromCart_UserNotFoundInCart() throws UserNotFoundInCart {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(productId.toString())
+                                .build();
+
+                // Sản phẩm thì tìm thấy
+                when(this.productService.getProductById(UUID.fromString(request.getProductId())))
+                                .thenReturn(product);
+                // Nhưng tìm giỏ hàng theo userId thì báo lỗi
+                when(this.cartRepository.findByUserId(userId))
+                                .thenThrow(new UserNotFoundInCart(userId));
+
+                assertThrows(UserNotFoundInCart.class, () -> {
+                        this.cartService.removeFromCart(userId, request);
+                });
+
+                verify(this.productService, times(1))
+                                .getProductById(UUID.fromString(request.getProductId()));
+                verify(this.cartRepository, times(1))
+                                .findByUserId(userId);
+        }
+
+        @Test
+        @DisplayName("TC4_RFC: Xóa sản phẩm nhưng sản phẩm không tồn tại trong giỏ")
+        void test_RemoveFromCart_CartItemNotFound() throws CartItemNotFound {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                Cart cart = this.fakeDataForTest.getCartFake1();
+                
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(productId.toString())
+                                .build();
+
+                // Sản phẩm và Giỏ hàng đều tìm thấy
+                when(this.productService.getProductById(UUID.fromString(request.getProductId())))
+                                .thenReturn(product);
+                when(this.cartRepository.findByUserId(userId))
+                                .thenReturn(Optional.of(cart));
+                        // Giả lập trả về Optional rỗng (Không tìm thấy sản phẩm trong giỏ)
+                when(this.cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()))
+                        .thenReturn(Optional.empty());
+
+                assertThrows(CartItemNotFound.class, () -> {
+                        this.cartService.removeFromCart(userId, request);
+                });
+
+                verify(this.productService, times(1))
+                                .getProductById(UUID.fromString(request.getProductId()));
+                verify(this.cartRepository, times(1))
+                                .findByUserId(userId);
+                verify(this.cartItemRepository, times(1))
+                                .findByCartIdAndProductId(cart.getId(), product.getId());
         }
 }
