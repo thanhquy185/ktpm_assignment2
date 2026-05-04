@@ -149,6 +149,6 @@ public class CartService {
         Cart cart = this.getCartByUserId(userId);
         this.cartItemRepository.deleteByCartId(cart.getId());
 
-        this.updateCartTotal(userId);
+        this.updateCartTotal(cart.getId());
     }
 }

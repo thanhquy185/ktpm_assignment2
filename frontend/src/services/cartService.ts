@@ -1,26 +1,94 @@
-// import api from './api';
-// import { CartResponse, CartItemRequest } from '../types';
+import instance from "./customize";
+import type { AxiosResponse } from "axios";
+import type { CartItemRequest, CartItemType } from "../types/cartItem";
+import type { CouponType } from "../types/coupon";
+import type {
+  CalculateCartTotalUnitTestResponse,
+  ValidateCartItemUnitTestResponse,
+} from "../types/test";
 
-// export const cartService = {
-//   async addToCart(request: CartItemRequest): Promise<CartResponse> {
-//     const response = await api.post('/cart/add', request);
-//     return response.data;
-//   },
+export const CartService = {
+  feature: "carts",
 
-//   async getCart(): Promise<CartResponse> {
-//     const response = await api.get('/cart');
-//     return response.data;
-//   },
+  async addToCart(
+    userId: string,
+    request: CartItemRequest,
+  ): Promise<AxiosResponse<CartItemType, any>> {
+    return await instance.post<CartItemType>(
+      `/${this.feature}/user/${userId}`,
+      {
+        productId: request.productId,
+        quantity: request.quantity,
+      },
+    );
+  },
 
-//   async removeFromCart(productId: string): Promise<CartResponse> {
-//     const response = await api.delete(`/cart/remove/${productId}`);
-//     return response.data;
-//   },
+  async updateQuantity(
+    userId: string,
+    request: CartItemRequest,
+  ): Promise<AxiosResponse<CartItemType, any>> {
+    return await instance.put<CartItemType>(`/${this.feature}/user/${userId}`, {
+      productId: request.productId,
+      quantity: request.quantity,
+    });
+  },
 
-//   async updateQuantity(productId: string, quantity: number): Promise<CartResponse> {
-//     const response = await api.put(`/cart/update/${productId}`, null, {
-//       params: { quantity },
-//     });
-//     return response.data;
-//   },
-// };
+  async removeToCart(
+    userId: string,
+    request: CartItemRequest,
+  ): Promise<AxiosResponse<CartItemType, any>> {
+    return await instance.delete<CartItemType>(
+      `/${this.feature}/user/${userId}`,
+      {
+        data: {
+          productId: request.productId,
+        },
+      },
+    );
+  },
+
+  validateCartItem(param: CartItemRequest): ValidateCartItemUnitTestResponse {
+    if (!param.quantity) {
+      return {
+        error: "QUANTITY_IS_NOT_NULL_OR_UNDEFINED",
+        message: "Quantity is not null or undefined!",
+      };
+    }
+
+    if (param.quantity <= 0) {
+      return {
+        error: "QUANTITY_MUST_BE_GREATER_THAN_ZERO",
+        message: "Quantity must be greater than zero!",
+      };
+    }
+
+    if (param.quantity > param.productStock!) {
+      return { error: "INSUFFICIENT_STOCK", message: "Insufficient stock!" };
+    }
+
+    return { error: undefined, message: "No errors" };
+  },
+
+  calculateCartTotal({
+    cartItems,
+    handleCartItem,
+    handleType,
+    coupon,
+  }: {
+    cartItems?: CartItemRequest[];
+    handleCartItem?: CartItemType;
+    handleType?: "add" | "update" | "remove";
+    coupon?: CouponType;
+  }): CalculateCartTotalUnitTestResponse {
+    console.log(cartItems);
+    let discount = 0,
+      newTotalPriceBeforeDiscount = 0,
+      newTotalPriceAfterDiscount = 0;
+
+    return {
+      discount,
+      newTotalPriceBeforeDiscount,
+      newTotalPriceAfterDiscount,
+    };
+  },
+};

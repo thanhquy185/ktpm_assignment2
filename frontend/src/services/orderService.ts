@@ -1,24 +1,25 @@
-// import api from './api';
-// import { OrderRequest, OrderResponse } from '../types';
+import instance from "./customize";
+import type { AxiosResponse } from "axios";
+import type { OrderRequest, OrderType } from "../types/order";
 
-// export const orderService = {
-//   async createOrder(request: OrderRequest): Promise<OrderResponse> {
-//     const response = await api.post('/orders', request);
-//     return response.data;
-//   },
+export const OrderService = {
+  feature: "orders",
 
-//   async getOrderById(orderId: string): Promise<OrderResponse> {
-//     const response = await api.get(`/orders/${orderId}`);
-//     return response.data;
-//   },
+  async createOrder(request: OrderRequest): Promise<AxiosResponse<OrderType>> {
+    return await instance.post(`/${this.feature}`, {
+      userId: request.userId,
+      couponId: request.couponId,
+      shippingAddress: request.shippingAddress,
+      shippingMethod: request.shippingMethod,
+      shippingFee: request.shippingFee,
+      paymentMethod: request.paymentMethod,
+      orderItems: request.orderItems,
+    });
+  },
 
-//   async getOrdersByUserId(userId: string): Promise<OrderResponse[]> {
-//     const response = await api.get(`/orders/user/${userId}`);
-//     return response.data;
-//   },
-
-//   async cancelOrder(orderId: string): Promise<OrderResponse> {
-//     const response = await api.put(`/orders/${orderId}/cancel`);
-//     return response.data;
-//   },
-// };
+  async cancelOrder(orderId: string): Promise<AxiosResponse<OrderType>> {
+    return await instance.delete(`/${this.feature}`, {
+      data: { orderId: orderId },
+    });
+  },
+};

@@ -1,5 +1,6 @@
 package com.shopcart.entities;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +34,12 @@ public class Coupon {
 
     @Column(nullable = false, unique = true)
     private String code;
+
+    @Column(columnDefinition = "DATE", nullable = false)
+    private LocalDate dateStart;
+
+    @Column(columnDefinition = "DATE", nullable = false)
+    private LocalDate dateEnd;
 
     @Convert(converter = CouponTypeConverter.class)
     @Column(nullable = false)

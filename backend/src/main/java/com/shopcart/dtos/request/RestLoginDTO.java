@@ -1,5 +1,7 @@
 package com.shopcart.dtos.request;
 
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -20,7 +22,8 @@ public class RestLoginDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UserLogin {
-        private Integer id;
+        private UUID id;
+        private String role;
         private String username;
 
     }

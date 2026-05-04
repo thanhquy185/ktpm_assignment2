@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext";
+import type { UserRequest } from "../types/user";
 
-export function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,15 +20,28 @@ export function LoginPage() {
       setError("Vui lòng nhập tên đăng nhập");
       return;
     }
+    if (!password.trim()) {
+      setError("Vui lòng nhập mật khẩu");
+      return;
+    }
 
     try {
       setLoading(true);
       setError("");
-      login(username);
+
+      login({
+        username,
+        password,
+      } as UserRequest);
+
+      toast.success("Đăng nhập thành công!");
+
       navigate("/products");
-    } catch (err) {
-      setError("Đăng nhập thất bại");
+    } catch (err: any) {
       console.error(err);
+
+      setError("Sai tên tài khoản hoặc mật khẩu!");
+      toast.error("Đăng nhập thất bại!");
     } finally {
       setLoading(false);
     }
@@ -34,73 +50,50 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <h1
-          className="text-3xl font-bold text-gray-900 mb-6 text-center"
-          data-testid="login-title"
-        >
+        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
           Đăng nhập
         </h1>
-
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-          data-testid="login-form"
-        >
+        <form onSubmit={handleSubmit}>
           <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Tên đăng nhập
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tên mật khẩu
             </label>
             <input
-              id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              data-testid="username-input"
-              placeholder="Nhập tên đăng nhập"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              placeholder="Nhập tên mật khẩu"
+              className="w-full px-4 py-2 border rounded-lg"
             />
           </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Mật khẩu
             </label>
             <input
-              id="password"
-              type="text"
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              data-testid="password-input"
               placeholder="Nhập mật khẩu"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full px-4 py-2 border rounded-lg"
             />
           </div>
           {error && (
-            <div
-              data-testid="error-message"
-              className="text-red-600 text-sm bg-red-50 p-2 rounded"
-            >
+            <div className="text-red-600 text-sm bg-red-50 p-2 rounded mt-4">
               {error}
             </div>
           )}
           <button
             type="submit"
             disabled={loading}
-            data-testid="login-button"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            className="w-full bg-indigo-600 text-white py-2 mt-10 rounded-lg"
           >
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Assignment 2 - Quy Châu NHuy QHuy
-        </p>
       </div>
     </div>
   );
-}
+};
+
+export default LoginPage;

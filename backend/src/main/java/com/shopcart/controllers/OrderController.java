@@ -5,6 +5,7 @@ import com.shopcart.dtos.request.OrderCreateRequest;
 import com.shopcart.dtos.response.RestResponse;
 import com.shopcart.entities.Order;
 import com.shopcart.exceptions.CouponNotFound;
+import com.shopcart.exceptions.CouponOutOfDate;
 import com.shopcart.exceptions.InsufficientStock;
 import com.shopcart.exceptions.InvalidInventoryQuantity;
 // import com.shopcart.exceptions.InvalidInventoryQuantity;
@@ -14,6 +15,7 @@ import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.OrderNotFound;
 import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.exceptions.ProductNotFoundInInventory;
+import com.shopcart.exceptions.UserNotFoundInCart;
 import com.shopcart.services.OrderService;
 import com.shopcart.utils.ValidationUtil;
 
@@ -48,20 +50,20 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(restResponse);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getOrderById(@PathVariable("id") String id) {
-        Order order = this.orderService.getOrderById(UUID.fromString(id));
+    // @GetMapping("/{id}")
+    // public ResponseEntity<?> getOrderById(@PathVariable("id") String id) {
+    // Order order = this.orderService.getOrderById(UUID.fromString(id));
 
-        RestResponse<Order> restResponse = RestResponse.<Order>builder()
-                .status(HttpStatus.OK.value())
-                .message("Get order by id is successful!")
-                .data(order)
-                .build();
+    // RestResponse<Order> restResponse = RestResponse.<Order>builder()
+    // .status(HttpStatus.OK.value())
+    // .message("Get order by id is successful!")
+    // .data(order)
+    // .build();
 
-        return ResponseEntity.status(HttpStatus.OK).body(restResponse);
-    }
+    // return ResponseEntity.status(HttpStatus.OK).body(restResponse);
+    // }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/{userId}")
     public ResponseEntity<?> getOrdersByUserId(@PathVariable("userId") String userId) {
         List<Order> orders = this.orderService.getOrderByUserId(UUID.fromString(userId));
 
@@ -74,8 +76,8 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(restResponse);
     }
 
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<?> createOrder(@PathVariable("userId") String userId,
+    @PostMapping("")
+    public ResponseEntity<?> createOrder(
             @RequestBody @Valid OrderCreateRequest request,
             BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -84,7 +86,7 @@ public class OrderController {
                     .body(ValidationUtil.buildRestResponse(bindingResult));
         }
 
-        Order order = this.orderService.createOrder(UUID.fromString(userId), request);
+        Order order = this.orderService.createOrder(request);
 
         RestResponse<Order> restResponse = RestResponse.<Order>builder()
                 .status(HttpStatus.CREATED.value())
@@ -95,8 +97,8 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(restResponse);
     }
 
-    @DeleteMapping("/user/{userId}")
-    public ResponseEntity<?> cancelOrder(@PathVariable("userId") String userId,
+    @DeleteMapping("")
+    public ResponseEntity<?> cancelOrder(
             @RequestBody @Valid OrderCancelRequest request,
             BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -193,6 +195,17 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restResponse);
     }
 
+    @ExceptionHandler(CouponOutOfDate.class)
+    public ResponseEntity<?> handleCouponOutOfDate(CouponOutOfDate e) {
+        RestResponse<Object> restResponse = RestResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("COUPON_OUT_OF_DATE")
+                .message(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restResponse);
+    }
+
     @ExceptionHandler(ProductNotFoundInInventory.class)
     public ResponseEntity<?> handleProductNotFoundInInventory(ProductNotFoundInInventory e) {
         RestResponse<Object> restResponse = RestResponse.builder()
@@ -213,5 +226,16 @@ public class OrderController {
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
+    }
+
+    @ExceptionHandler(UserNotFoundInCart.class)
+    public ResponseEntity<?> handleUserNotFoundInCart(UserNotFoundInCart e) {
+        RestResponse<Object> restResponse = RestResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("USER_NOT_FOUND_IN_CART")
+                .message(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restResponse);
     }
 }

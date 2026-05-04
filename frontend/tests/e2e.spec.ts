@@ -66,6 +66,14 @@ test.describe('ShopCart E2E Tests', () => {
     await expect(page.locator('[data-testid="cart-title"]')).toContainText('Giỏ hàng');
   });
 
+  test('User can navigate to orders page', async ({ page }) => {
+    await page.fill('[data-testid="username-input"]', 'testuser');
+    await page.click('[data-testid="login-button"]');
+
+    await page.click('[data-testid="nav-orders"]');
+    await expect(page.locator('[data-testid="orders-title"]')).toContainText('Đơn hàng');
+  });
+
   test('User can logout', async ({ page }) => {
     // Login first
     await page.fill('[data-testid="username-input"]', 'testuser');

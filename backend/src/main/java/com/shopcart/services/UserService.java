@@ -30,4 +30,12 @@ public class UserService {
         return this.userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundByUsername(username));
     }
+
+    public void changeRefreshToken(String username, String refreshToken) {
+        User userChange = this.getUserByUsername(username);
+        if (userChange != null) {
+            userChange.setRefreshToken(refreshToken);
+            this.userRepository.save(userChange);
+        }
+    }
 }

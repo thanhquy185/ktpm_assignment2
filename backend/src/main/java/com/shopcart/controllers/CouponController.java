@@ -16,6 +16,7 @@ import com.shopcart.dtos.response.RestResponse;
 import com.shopcart.entities.Coupon;
 import com.shopcart.exceptions.CouponNotFound;
 import com.shopcart.exceptions.CouponNotFoundByCode;
+import com.shopcart.exceptions.CouponOutOfDate;
 import com.shopcart.services.CouponService;
 
 import lombok.RequiredArgsConstructor;
@@ -82,6 +83,17 @@ public class CouponController {
         RestResponse<Object> restResponse = RestResponse.builder()
                 .status(HttpStatus.NOT_FOUND.value())
                 .error("COUPON_NOT_FOUND_BY_CODE")
+                .message(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restResponse);
+    }
+
+    @ExceptionHandler(CouponOutOfDate.class)
+    public ResponseEntity<?> handleCouponOutOfDate(CouponOutOfDate e) {
+        RestResponse<Object> restResponse = RestResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("COUPON_OUT_OF_DATE")
                 .message(e.getMessage())
                 .build();
 

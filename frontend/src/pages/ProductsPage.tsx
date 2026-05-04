@@ -1,118 +1,50 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart } from "lucide-react";
-import api from "../services/api";
-import { ProductCard } from "../components/ProductCard";
-// import { cartService } from '../services/cartService';
+import { toast } from "react-toastify";
+import { HttpStatusCode } from "axios";
+import { useAuth } from "../contexts/AuthContext";
+import ProductCardComponent from "../components/ProductCard";
+import { ProductService } from "../services/productService";
+import { CartService } from "../services/cartService";
+import type { ProductType } from "../types/product";
+import type { CartItemRequest } from "../types/cartItem";
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  quantity: number;
-  category: {
-    id: string;
-    name: string;
-  };
-  status: string;
-}
+const ProductsPage: React.FC = () => {
+  const { user, fetchUser } = useAuth();
 
-export function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [addingToCart, setAddingToCart] = useState<string | null>(null);
-
-  const demoProducts: Product[] = [
-    {
-      id: "1",
-      name: "Son dưỡng môi",
-      description: "Giữ ẩm môi mềm mịn suốt cả ngày",
-      price: 120000,
-      quantity: 15,
-      category: { id: "c1", name: "Son" },
-      status: "ACTIVE",
-    },
-    {
-      id: "2",
-      name: "Kem chống nắng SPF50",
-      description: "Bảo vệ da khỏi tia UV, không gây nhờn rít",
-      price: 250000,
-      quantity: 8,
-      category: { id: "c2", name: "Skincare" },
-      status: "ACTIVE",
-    },
-    {
-      id: "3",
-      name: "Sữa rửa mặt dịu nhẹ",
-      description: "Làm sạch sâu, phù hợp da nhạy cảm",
-      price: 180000,
-      quantity: 20,
-      category: { id: "c2", name: "Skincare" },
-      status: "ACTIVE",
-    },
-    {
-      id: "4",
-      name: "Serum Vitamin C",
-      description: "Giúp da sáng và đều màu hơn",
-      price: 320000,
-      quantity: 5,
-      category: { id: "c2", name: "Skincare" },
-      status: "ACTIVE",
-    },
-    {
-      id: "5",
-      name: "Phấn phủ kiềm dầu",
-      description: "Kiềm dầu tốt, giữ lớp makeup lâu trôi",
-      price: 210000,
-      quantity: 0,
-      category: { id: "c3", name: "Makeup" },
-      status: "OUT_OF_STOCK",
-    },
-    {
-      id: "6",
-      name: "Nước tẩy trang",
-      description: "Làm sạch lớp makeup và bụi bẩn",
-      price: 150000,
-      quantity: 12,
-      category: { id: "c2", name: "Skincare" },
-      status: "ACTIVE",
-    },
-  ];
-
+  const [products, setProducts] = useState<ProductType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
   useEffect(() => {
-    // const fetchProducts = async () => {
-    //   try {
-    //     const response = await api.get("/products");
-    //     setProducts(response.data);
-    //   } catch (err) {
-    //     setError("Không thể tải danh sách sản phẩm");
-    //     console.error(err);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
+    const fetchProducts = async () => {
+      const response = await ProductService.getAllProduct();
+      if (response.status === HttpStatusCode.Ok && response.data) {
+        setProducts(response.data);
+      } else if ((response as any).error) {
+        console.error((response as any).message);
+        setError("Không thể tải danh sách sản phẩm");
+      }
+    };
 
-    // fetchProducts();
-    setProducts(demoProducts);
+    fetchProducts();
     setLoading(false);
   }, []);
 
-  const handleAddToCart = async (product: Product) => {
-    try {
-      // setAddingToCart(product.id);
-      // await cartService.addToCart({
-      //   productId: product.id,
-      //   quantity: 1,
-      // });
-      // Show success message (could be improved with toast)
-      alert(`Đã thêm ${product.name} vào giỏ hàng`);
-    } catch (err) {
-      alert("Không thể thêm vào giỏ hàng");
-      console.error(err);
-    } finally {
-      setAddingToCart(null);
+  const [addToCart, setAddToCart] = useState<string | null>(null);
+  const handleAddToCart = async (product: ProductType) => {
+    setAddToCart(product.id!);
+
+    const response = await CartService.addToCart(user?.id!, {
+      productId: product.id,
+      quantity: 1,
+    } as CartItemRequest);
+    if (response.status === HttpStatusCode.Created && response.data) {
+      await fetchUser();
+      toast.success("Thêm sản phẩm vào giỏ hàng thành công!");
+    } else if ((response as any).error) {
+      toast.error((response as any).message);
     }
+
+    setAddToCart(null);
   };
 
   if (loading) {
@@ -153,12 +85,10 @@ export function ProductsPage() {
             data-testid="products-grid"
           >
             {products.map((product) => (
-              <ProductCard
+              <ProductCardComponent
                 key={product.id}
                 product={product}
-                onAddToCart={async (product) => {
-                  console.log(product);
-                }}
+                onAddToCart={handleAddToCart}
               />
             ))}
           </div>
@@ -166,4 +96,6 @@ export function ProductsPage() {
       </div>
     </div>
   );
-}
+};
+
+export default ProductsPage;

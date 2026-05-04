@@ -167,8 +167,9 @@ Coverage ≥ 85% cho OrderService
 - TC5_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại
 - TC6_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
 - TC7_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
-- TC8_CO: Huỷ đơn hàng nhưng người dùng không tồn tại
+- TC8_CO: Tạo đơn hàng nhưng người dùng không tồn tại
 - TC9_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại
+- TC10_CO: Tạo đơn hàng nhưng mã giảm giá hết hạn
 
 ##### cancelOrder()
 
@@ -179,14 +180,15 @@ Coverage ≥ 85% cho OrderService
 
 #### Phân công
 
-| Thành viên           | Method                  | Test case |
-| -------------------- | ----------------------- | :-------: |
-| Trần Thanh Quy       | getOrderById()          | TC1 → TC2 |
-| Trần Thanh Quy       | checkStockBeforeOrder() | TC1 → TC4 |
-| Trần Thanh Quy       | calculateOrderTotal()   |    TC1    |
-| Danh Thị Ngọc Châu   | createOrder()           | TC1 → TC4 |
-| Đỗ Nhật Huy          | cancelOrder()           | TC1 → TC4 |
-| Nguyễn Đình Quốc Huy | createOrder()           | TC5 → TC9 |
+| Thành viên           | Method                  | Test case  |
+| -------------------- | ----------------------- | :--------: |
+| Trần Thanh Quy       | getOrderById()          | TC1 → TC2  |
+| Trần Thanh Quy       | checkStockBeforeOrder() | TC1 → TC4  |
+| Trần Thanh Quy       | calculateOrderTotal()   |    TC1     |
+| Trần Thanh Quy       | createOrder()           | TC9 → TC10 |
+| Danh Thị Ngọc Châu   | createOrder()           | TC1 → TC4  |
+| Đỗ Nhật Huy          | cancelOrder()           | TC1 → TC4  |
+| Nguyễn Đình Quốc Huy | createOrder()           | TC5 → TC8  |
 
 ---
 
@@ -225,17 +227,17 @@ Các endpoint còn lại được khuyến khích triển khai thêm để hoàn
 #### Các endpoint
 
 - POST /api/inventories
-- POST /api/orders/user/{userId}
-- DELETE /api/orders/user/{userId}
+- POST /api/orders
+- DELETE /api/orders
 
 ## Phân công
 
-| Thành viên           | Controller | Method | Endpoint                  |
-| -------------------- | :--------: | :----: | ------------------------- |
-| Trần Thanh Quy       | Inventory  |  POST  | /api/inventories          |
-| Danh Thị Ngọc Châu   |    Cart    |  POST  | /api/carts/user/{userId}  |
-| Đỗ Nhật Huy          |   Order    | DELETE | /api/orders/user/{userId} |
-| Nguyễn Đình Quốc Huy |   Order    |  POST  | /api/orders/user/{userId} |
+| Thành viên           | Controller | Method | Endpoint                 |
+| -------------------- | :--------: | :----: | ------------------------ |
+| Trần Thanh Quy       | Inventory  |  POST  | /api/inventories         |
+| Danh Thị Ngọc Châu   |    Cart    |  POST  | /api/carts/user/{userId} |
+| Đỗ Nhật Huy          |   Order    | DELETE | /api/orders              |
+| Nguyễn Đình Quốc Huy |   Order    |  POST  | /api/orders              |
 
 ---
 

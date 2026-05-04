@@ -19,6 +19,8 @@ import com.shopcart.repositories.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +29,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderService {
     private final UserService userService;
+    private final CartService cartService;
     private final CouponService couponService;
     private final ProductService productService;
     private final InventoryService inventoryService;
@@ -72,13 +75,18 @@ public class OrderService {
         return subtotal - discount + shippingFee;
     }
 
-    public Order createOrder(UUID userId, OrderCreateRequest request) {
+    public Order createOrder(OrderCreateRequest request) {
         this.checkQuantityAndPriceBeforeOrder(request.getOrderItems());
         this.checkStockBeforeOrder(request.getOrderItems());
 
+        LocalDateTime currentDateTime = LocalDateTime.now();
+
         Order order = new Order();
-        order.setUser(this.userService.getUserById(userId));
+        order.setUser(this.userService.getUserById(UUID.fromString(request.getUserId())));
+        order.setCreatedAt(currentDateTime);
         order.setShippingAddress(request.getShippingAddress());
+        order.setShippingMethod(request.getShippingMethod());
+        order.setPaymentMethod(request.getPaymentMethod());
         order.setStatus(OrderStatusEnum.PENDING);
         // - Tổng tiền sản phẩm
         List<OrderItem> orderItems = request.getOrderItems().stream().map(orderItem -> {
@@ -96,11 +104,21 @@ public class OrderService {
         order.setOrderItems(orderItems);
         order.setSubtotal(subtotal);
         // - Số tiền giảm giá
-        Coupon coupon = this.couponService.getCouponById(UUID.fromString(request.getCouponId()));
-        Double discount = this.couponService.calculateDiscount(
-                coupon.getType().getValue(),
-                coupon.getDiscount(),
-                subtotal);
+        Coupon coupon = request.getCouponId() != null && !request.getCouponId().isEmpty()
+                ? this.couponService.getCouponById(UUID.fromString(request.getCouponId()))
+                : null;
+        Double discount = 0D;
+        if (coupon != null) {
+            this.couponService.checkOutOfDate(currentDateTime.toLocalDate(),
+                    coupon.getCode(),
+                    coupon.getDateStart(),
+                    coupon.getDateEnd());
+
+            discount = this.couponService.calculateDiscount(
+                    coupon.getType().getValue(),
+                    coupon.getDiscount(),
+                    subtotal);
+        }
         order.setCoupon(coupon);
         order.setDiscount(discount);
         // - Chi phí giao hàng
@@ -111,6 +129,8 @@ public class OrderService {
         request.getOrderItems().forEach(
                 orderItem -> this.inventoryService.decreaseStock(UUID.fromString(orderItem.getProductId()),
                         orderItem.getQuantity()));
+
+        this.cartService.clearCart(UUID.fromString(request.getUserId()));
 
         return this.orderRepository.save(order);
     }

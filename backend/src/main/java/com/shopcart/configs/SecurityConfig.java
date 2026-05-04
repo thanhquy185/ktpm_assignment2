@@ -112,7 +112,7 @@ public class SecurityConfig {
         return request -> {
             String path = request.getServletPath();
 
-            if (path.startsWith("/api/auth/")
+            if (path.startsWith("/api/users/")
                     || path.startsWith("/api/products")) {
                 return null;
             }

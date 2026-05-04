@@ -33,7 +33,7 @@ public class CartControllerIntegrationTest {
     private final FakeDataForTest fakeDataForTest = new FakeDataForTest();
 
     @Test
-    @DisplayName("POST /api/carts - Thêm sản phẩm vào giỏ hàng")
+    @DisplayName("POST /api/carts/user/{userId} - Thêm sản phẩm vào giỏ hàng")
     void test_AddToCart() throws Exception {
 
     }

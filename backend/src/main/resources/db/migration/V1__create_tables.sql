@@ -3,7 +3,8 @@ CREATE TABLE users (
     id UUID PRIMARY KEY,
     role VARCHAR(8) NOT NULL,
     username VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    refresh_token TEXT
 );
 
 -- CATEGORIES
@@ -20,7 +21,7 @@ CREATE TABLE products (
     description TEXT,
     price BIGINT NOT NULL,
     status VARCHAR(16) NOT NULL,
-    category_id UUID,
+    category_id UUID NOT NULL,
     CONSTRAINT fk_product_category FOREIGN KEY (category_id)
         REFERENCES categories(id)
 );
@@ -29,7 +30,7 @@ CREATE TABLE products (
 CREATE TABLE inventories (
     id UUID PRIMARY KEY,
     stock BIGINT NOT NULL,
-    product_id UUID NOT NULL UNIQUE,
+    product_id UUID NOT NULL,
     CONSTRAINT fk_inventory_product FOREIGN KEY (product_id)
         REFERENCES products(id)
 );
@@ -39,7 +40,7 @@ CREATE TABLE carts (
     id UUID PRIMARY KEY,
     total_quantity BIGINT NOT NULL,
     total_price BIGINT NOT NULL,
-    user_id UUID NOT NULL UNIQUE,
+    user_id UUID NOT NULL,
     CONSTRAINT fk_cart_user FOREIGN KEY (user_id)
         REFERENCES users(id)
 );
@@ -61,6 +62,8 @@ CREATE TABLE cart_items (
 CREATE TABLE coupons (
     id UUID PRIMARY KEY,
     code VARCHAR(255) NOT NULL UNIQUE,
+    date_start DATE NOT NULL,
+    date_end DATE NOT NULL,
     type VARCHAR(50) NOT NULL,
     discount BIGINT NOT NULL
 );
@@ -68,14 +71,17 @@ CREATE TABLE coupons (
 -- ORDERS
 CREATE TABLE orders (
     id UUID PRIMARY KEY,
+    created_at TIMESTAMP NOT NULL,
     shipping_address VARCHAR(255) NOT NULL,
+    shipping_method VARCHAR(8) NOT NULL,
+    payment_method VARCHAR(4) NOT NULL,
     subtotal BIGINT NOT NULL,
     discount DOUBLE PRECISION NOT NULL,
     shipping_fee BIGINT NOT NULL,
     total_price DOUBLE PRECISION NOT NULL,
     status VARCHAR(9) NOT NULL,
-    user_id UUID,
-    coupon_id UUID,
+    user_id UUID NOT NULL,
+    coupon_id UUID NULl,
     CONSTRAINT fk_order_user FOREIGN KEY (user_id)
         REFERENCES users(id),
     CONSTRAINT fk_order_coupon FOREIGN KEY (coupon_id)

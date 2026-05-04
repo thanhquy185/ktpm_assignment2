@@ -1,5 +1,6 @@
 package com.shopcart.services;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,6 +10,7 @@ import com.shopcart.entities.Coupon;
 import com.shopcart.enums.CouponTypeEnum;
 import com.shopcart.exceptions.CouponNotFound;
 import com.shopcart.exceptions.CouponNotFoundByCode;
+import com.shopcart.exceptions.CouponOutOfDate;
 import com.shopcart.repositories.CouponRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,12 @@ public class CouponService {
     public Coupon getCouponByCode(String code) {
         return this.couponRepository.findByCode(code)
                 .orElseThrow(() -> new CouponNotFoundByCode(code));
+    }
+
+    public void checkOutOfDate(LocalDate currentDate, String code, LocalDate dateStart, LocalDate dateEnd) {
+        if (currentDate.isBefore(dateStart) || currentDate.isAfter(dateEnd)) {
+            throw new CouponOutOfDate(code);
+        }
     }
 
     public double calculateDiscount(String type, Long value, Long subtotal) {
