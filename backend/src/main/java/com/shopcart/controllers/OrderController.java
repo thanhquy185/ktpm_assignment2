@@ -65,7 +65,7 @@ public class OrderController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getOrdersByUserId(@PathVariable("userId") String userId) {
-        List<Order> orders = this.orderService.getOrderByUserId(UUID.fromString(userId));
+        List<Order> orders = this.orderService.getOrdersByUserId(UUID.fromString(userId));
 
         RestResponse<List<Order>> restResponse = RestResponse.<List<Order>>builder()
                 .status(HttpStatus.OK.value())

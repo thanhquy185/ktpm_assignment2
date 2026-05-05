@@ -3,42 +3,37 @@ import { toast } from "react-toastify";
 import { HttpStatusCode } from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import ProductCardComponent from "../components/ProductCard";
-import { ProductService } from "../services/productService";
-import { CartService } from "../services/cartService";
+import { ProductApi } from "../services/api/productApi";
+import { CartApi } from "../services/api/cartApi";
 import type { ProductType } from "../types/product";
-import type { CartItemRequest } from "../types/cartItem";
+import type { CartItemAddToCartRequest } from "../types/cartItem";
 
 const ProductsPage: React.FC = () => {
-  const { user, fetchUser } = useAuth();
+  const { user } = useAuth();
 
   const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const response = await ProductService.getAllProduct();
-      if (response.status === HttpStatusCode.Ok && response.data) {
-        setProducts(response.data);
-      } else if ((response as any).error) {
-        console.error((response as any).message);
-        setError("Không thể tải danh sách sản phẩm");
-      }
-    };
-
-    fetchProducts();
-    setLoading(false);
-  }, []);
-
   const [addToCart, setAddToCart] = useState<string | null>(null);
+
+  const fetchProducts = async () => {
+    const response = await ProductApi.getAllProduct();
+    if (response.status === HttpStatusCode.Ok && response.data) {
+      setProducts(response.data);
+    } else if ((response as any).error) {
+      console.error((response as any).message);
+      setError("Không thể tải danh sách sản phẩm");
+    }
+  };
   const handleAddToCart = async (product: ProductType) => {
     setAddToCart(product.id!);
 
-    const response = await CartService.addToCart(user?.id!, {
+    const response = await CartApi.addToCart(user?.id!, {
       productId: product.id,
       quantity: 1,
-    } as CartItemRequest);
+    } as CartItemAddToCartRequest);
     if (response.status === HttpStatusCode.Created && response.data) {
-      await fetchUser();
+      await fetchProducts();
       toast.success("Thêm sản phẩm vào giỏ hàng thành công!");
     } else if ((response as any).error) {
       toast.error((response as any).message);
@@ -46,6 +41,12 @@ const ProductsPage: React.FC = () => {
 
     setAddToCart(null);
   };
+
+  useEffect(() => {
+    setLoading(true);
+    fetchProducts();
+    setLoading(false);
+  }, []);
 
   if (loading) {
     return (

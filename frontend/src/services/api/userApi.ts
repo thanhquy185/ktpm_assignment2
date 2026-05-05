@@ -1,8 +1,8 @@
 import instance from "./customize";
 import type { AxiosResponse } from "axios";
-import type { UserRequest, UserType } from "../types/user";
+import type { UserRequest, UserType } from "../../types/user";
 
-export const UserService = {
+export const UserApi = {
   feature: "users",
 
   async getInfo(): Promise<AxiosResponse<UserType, any>> {

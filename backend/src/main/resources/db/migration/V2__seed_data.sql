@@ -13,7 +13,7 @@ VALUES  (gen_random_uuid(), 'ADMIN', 'qchh', '$2a$10$iWmFzN.89701WHeAVazxa.jQAPg
 
 -- COUPONS
 INSERT INTO coupons(id, code, date_start, date_end, type, discount)
-VALUES (gen_random_uuid(), 'SALE10%', CURRENT_DATE - INTERVAL '1 day', CURRENT_DATE + INTERVAL '10 days', 'PERCENT', 10),
+VALUES (gen_random_uuid(), 'SALE10', CURRENT_DATE - INTERVAL '1 day', CURRENT_DATE + INTERVAL '10 days', 'PERCENT', 10),
     (gen_random_uuid(), 'SALE50K', CURRENT_DATE - INTERVAL '5 days', CURRENT_DATE + INTERVAL '5 days', 'FIXED', 50000),
     (gen_random_uuid(), 'FLASH20', CURRENT_DATE - INTERVAL '2 days', CURRENT_DATE + INTERVAL '1 day', 'PERCENT', 20),
     (gen_random_uuid(), 'OLD10', CURRENT_DATE - INTERVAL '10 days', CURRENT_DATE - INTERVAL '1 day', 'PERCENT', 10),
@@ -47,7 +47,7 @@ INSERT INTO orders (
 VALUES (gen_random_uuid(), NOW(), '123 Nguyễn Văn A, TP.HCM', 'STANDARD',
         'COD', 45000000, 4500000, 30000, 40530000, 'PENDING',
         (SELECT id FROM users WHERE username = 'customer'),
-        (SELECT id FROM coupons WHERE code = 'SALE10%')),
+        (SELECT id FROM coupons WHERE code = 'SALE10')),
     (gen_random_uuid(), NOW(), '456 Lê Lợi, TP.HCM', 'EXPRESS',
         'BANK', 70000000, 50000, 50000, 69950000, 'CONFIRMED',
         (SELECT id FROM users WHERE username = 'customer'),

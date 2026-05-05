@@ -43,7 +43,7 @@ public class OrderService {
         return this.orderRepository.findById(id).orElseThrow(() -> new OrderNotFound(id));
     }
 
-    public List<Order> getOrderByUserId(UUID userId) {
+    public List<Order> getOrdersByUserId(UUID userId) {
         return this.orderRepository.findByUserId(userId);
     }
 

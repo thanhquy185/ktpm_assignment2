@@ -20,16 +20,16 @@
 
 ### Integration test
 
-- Trần Thanh Quy: POST /api/inventories
 - Danh Thị Ngọc Châu: POST /api/carts/user/{userId}
-- Đỗ Nhật Huy: DELETE /api/orders/user/{userId}
-- Nguyễn Đình Quốc Huy: POST /api/orders/user/{userId}
+- Trần Thanh Quy: POST /api/orders
+- Đỗ Nhật Huy: DELETE /api/orders, POST /api/inventories
+- Nguyễn Đình Quốc Huy: POST /api/orders
 
 ### Mock test
 
 #### CartController
 
-- Trần Thanh Quy: GET /api/carts, GET /api/carts/{id}, GET /api/carts/user/{userId}
+- Trần Thanh Quy: GET /api/carts, GET /api/carts/{id}, GET /api/carts/user/{userId}, PUT /api/carts/user/{userId}
 - Danh Thị Ngọc Châu: PUT /api/carts/user/{userId}
 - Đỗ Nhật Huy: POST /api/carts/user/{userId}
 - Nguyễn Đình Quốc Huy: DELETE /api/carts/user/{userId}
@@ -39,7 +39,7 @@
 - Trần Thanh Quy: checkQuantityAndPriceBeforeOrder(), checkStockBeforeOrder(), calculateOrderTotal()
 - Danh Thị Ngọc Châu: createOrder()
 - Đỗ Nhật Huy: cancelOrder()
-- Nguyễn Đình Quốc Huy: getOrders(), getOrderById(), getOrderByUserId()
+- Nguyễn Đình Quốc Huy: getOrders(), getOrderById(), getOrdersByUserId()
 
 ---
 
@@ -92,22 +92,24 @@ Coverage ≥ 85% cho CartService
 
 - TC1_ATC: Thêm sản phẩm thành công
 - TC2_ATC: Thêm sản phẩm nhưng sản phẩm không tồn tại
-- TC3_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn hoặc bằng 0
-- TC4_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại
-- TC5_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ
-- TC6_ATC: Thêm sản phẩm nhưng người dùng không tồn tại
-- TC7_ATC: Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)
-- TC8_ATC: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ
+- TC3_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn 0
+- TC4_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bằng 0
+- TC5_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại
+- TC6_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ
+- TC7_ATC: Thêm sản phẩm nhưng người dùng không tồn tại
+- TC8_ATC: Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)
+- TC9_ATC: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ
 
 ##### updateQuantity()
 
 - TC1_UQ: Cập nhật sản phẩm thành công
 - TC2_UQ: Cập nhật sản phẩm nhưng sản phẩm không tồn tại
-- TC3_UQ: Cập nhật sản phẩm nhưng số lượng sản phẩm bé hơn hoặc bằng 0
-- TC4_UQ: Cập nhật sản phẩm nhưng tồn kho của sản phẩm không tồn tại
-- TC5_UQ: Cập nhật sản phẩm nhưng tồn kho của sản phẩm không đủ
-- TC6_UQ: Cập nhật sản phẩm nhưng giỏ hàng của người dùng không tồn tại
-- TC7_UQ: Cập nhật sản phẩm nhưng sản phẩm không tồn tại trong giỏ
+- TC3_UQ: Cập nhật sản phẩm nhưng số lượng sản phẩm bé hơn 0
+- TC4_UQ: Cập nhật sản phẩm nhưng số lượng sản phẩm bằng 0
+- TC5_UQ: Cập nhật sản phẩm nhưng tồn kho của sản phẩm không tồn tại
+- TC6_UQ: Cập nhật sản phẩm nhưng tồn kho của sản phẩm không đủ
+- TC7_UQ: Cập nhật sản phẩm nhưng giỏ hàng của người dùng không tồn tại
+- TC8_UQ: Cập nhật sản phẩm nhưng sản phẩm không tồn tại trong giỏ
 
 ##### removeFromCart() Done ✅ (Nguyễn Đình Quốc Huy)
 Huy
@@ -120,11 +122,11 @@ Huy
 
 | Thành viên           | Method           | Test case |
 | -------------------- | ---------------- | :-------: |
-| Trần Thanh Quy       | addToCart()      | TC6 → TC8 |
-| Trần Thanh Quy       | updateQuantity() | TC6 → TC7 |
-| Danh Thị Ngọc Châu   | updateQuantity() | TC1 → TC5 |
-| Đỗ Nhật Huy          | addToCart()      | TC1 → TC5 |
-| Nguyễn Đình Quốc Huy | removeFromCart() | TC1 → TC4 | ✅
+| Trần Thanh Quy       | addToCart()      | TC7 → TC9 |
+| Trần Thanh Quy       | updateQuantity() | TC7 → TC8 |
+| Danh Thị Ngọc Châu   | updateQuantity() | TC1 → TC6 |
+| Đỗ Nhật Huy          | addToCart()      | TC1 → TC6 |
+| Nguyễn Đình Quốc Huy | removeFromCart() | TC1 → TC4 |
 
 ### OrderService
 
@@ -158,18 +160,20 @@ Coverage ≥ 85% cho OrderService
 
 - TC1_COT: Tính tổng tiền đơn hàng thành cHuy
 
-##### createOrder() ✅ DONE (Danh Thị Ngọc Châu) (Nguyễn Đình Quốc Huy)
-                        
-- TC1_CO: Tạo đơn hàng thành công ✅
-- TC2_CO: Tạo đơn hàng nhưng sản phẩm không tồn tại ✅
-- TC3_CO: Tạo đơn hàng nhưng số lượng sản phẩm bé hơn hoặc bằng 0 ✅
-- TC4_CO: Tạo đơn hàng nhưng giá bán sản phẩm bé hơn hoặc bằng 0 ✅
-- TC5_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại ✅
-- TC6_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại✅
-- TC7_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)✅
-- TC8_CO: Tạo đơn hàng nhưng người dùng không tồn tại✅
-- TC9_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại
-- TC10_CO: Tạo đơn hàng nhưng mã giảm giá hết hạn
+##### createOrder()
+
+- TC1_CO: Tạo đơn hàng thành công
+- TC2_CO: Tạo đơn hàng nhưng sản phẩm không tồn tại
+- TC3_CO: Tạo đơn hàng nhưng số lượng sản phẩm bé hơn 0
+- TC4_CO: Tạo đơn hàng nhưng số lượng sản phẩm bằng 0
+- TC5_CO: Tạo đơn hàng nhưng giá bán sản phẩm bé hơn 0
+- TC6_CO: Tạo đơn hàng nhưng giá bán sản phẩm bằng 0
+- TC7_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại
+- TC8_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
+- TC9_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
+- TC10_CO: Tạo đơn hàng nhưng người dùng không tồn tại
+- TC11_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại
+- TC12_CO: Tạo đơn hàng nhưng mã giảm giá hết hạn
 
 ##### cancelOrder()
 
@@ -185,10 +189,9 @@ Coverage ≥ 85% cho OrderService
 | Trần Thanh Quy       | getOrderById()          | TC1 → TC2  |
 | Trần Thanh Quy       | checkStockBeforeOrder() | TC1 → TC4  |
 | Trần Thanh Quy       | calculateOrderTotal()   |    TC1     |
-| Trần Thanh Quy       | createOrder()           | TC9 → TC10 |
-| Danh Thị Ngọc Châu   | createOrder()           | TC1 → TC4  |
+| Danh Thị Ngọc Châu   | createOrder()           | TC1 → TC6  |
 | Đỗ Nhật Huy          | cancelOrder()           | TC1 → TC4  |
-| Nguyễn Đình Quốc Huy | createOrder()           | TC5 → TC8  | ✅
+| Nguyễn Đình Quốc Huy | createOrder()           | TC7 → TC12 |
 
 ---
 
@@ -212,7 +215,17 @@ Test CORS và headers (không tính điểm riêng, dùng để hoàn thiện b�
 
 #### Các endpoint
 
-- POST /api/carts/user/{userId} ✅ DONE (Danh Thị Ngọc Châu)
+##### POST /api/carts/user/{userId}
+
+- Thêm sản phẩm thành công
+- Thêm sản phẩm nhưng sản phẩm không tồn tại
+- Thêm sản phẩm nhưng số lượng sản phẩm bé hơn 0
+- Thêm sản phẩm nhưng số lượng sản phẩm bằng 0
+- Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại
+- Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ
+- Thêm sản phẩm nhưng người dùng không tồn tại
+- Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)
+- Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ
 
 ### OrderController + InventoryController
 
@@ -226,18 +239,43 @@ Các endpoint còn lại được khuyến khích triển khai thêm để hoàn
 
 #### Các endpoint
 
-- POST /api/inventories
-- POST /api/orders
-- DELETE /api/orders
+##### POST /api/orders
+
+- Tạo đơn hàng thành công
+- Tạo đơn hàng nhưng sản phẩm không tồn tại
+- Tạo đơn hàng nhưng số lượng sản phẩm bé hơn 0
+- Tạo đơn hàng nhưng số lượng sản phẩm bằng 0
+- Tạo đơn hàng nhưng giá bán sản phẩm bé hơn h 0
+- Tạo đơn hàng nhưng giá bán sản phẩm bằng 0
+- Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại
+- Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
+- Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
+- Tạo đơn hàng nhưng người dùng không tồn tại
+- Tạo đơn hàng nhưng mã giảm giá không tồn tại
+- Tạo đơn hàng nhưng mã giảm giá hết hạn
+
+##### DELETE /api/orders
+
+- Huỷ đơn hàng thành công
+- Huỷ đơn hàng nhưng đơn hàng của người dùng không tồn tại
+- Huỷ đơn hàng nhưng đơn hàng đã được huỷ từ trước
+- Huỷ đơn hàng nhưng số lượng sản phẩm bé hơn hoặc bằng (tăng tồn kho sản phẩm)
+
+##### POST /api/inventories
+
+- Kiểm tra tồn kho thành công
+- Kiểm tra tồn kho nhưng có 1 sản phẩm có số lượng cần so sánh bé hơn hoặc bằng 0
+- Kiểm tra tồn kho nhưng có 1 sản phẩm không tồn tại trong tồn kho
 
 ## Phân công
 
-| Thành viên           | Controller | Method | Endpoint                 |
-| -------------------- | :--------: | :----: | ------------------------ |
-| Trần Thanh Quy       | Inventory  |  POST  | /api/inventories         |
-| Danh Thị Ngọc Châu   |    Cart    |  POST  | /api/carts/user/{userId} | ✅ DONE |
-| Đỗ Nhật Huy          |   Order    | DELETE | /api/orders              |
-| Nguyễn Đình Quốc Huy |   Order    |  POST  | /api/orders              |
+| Thành viên           | Controller | Method | Endpoint                 | Test case |
+| -------------------- | :--------: | :----: | ------------------------ | :-------: |
+| Trần Thanh Quy       |    Cart    |  POST  | /api/carts/user/{userId} |    All    |
+| Danh Thị Ngọc Châu   |   Order    |  POST  | /api/orders              |   1 → 6   |
+| Đỗ Nhật Huy          |   Order    | DELETE | /api/orders              |    All    |
+| Đỗ Nhật Huy          | Inventory  |  POST  | /api/inventories         |    All    |
+| Nguyễn Đình Quốc Huy |   Order    |  POST  | /api/orders              |  7 → 12   |
 
 ---
 
@@ -261,23 +299,62 @@ Verify mock interactions và kiểm tra phản hồi trả về từ controller 
 
 #### Các endpoint
 
-- GET /api/carts
-- GET /api/carts/{id}
-- GET /api/carts/user/{userId}
-- POST /api/carts/user/{userId}
-- PUT /api/carts/user/{userId} ✅ DONE (Danh Thị Ngọc Châu)
-- DELETE /api/carts/user/{userId}
+##### GET /api/carts
+
+- Truy danh sách giỏ hàng thành công
+- Truy danh sách giỏ hàng thành công (danh sách rỗng)
+
+##### GET /api/carts/{id}
+
+- Truy một giỏ hàng theo mã giỏ hàng thành công
+- Truy một giỏ hàng theo mã giỏ hàng nhưng mã giỏ hàng không tồn tại
+
+##### GET /api/carts/user/{userId}
+
+- Truy một giỏ hàng theo mã người dùng thành công
+- Truy một giỏ hàng theo mã người dùng nhưng mã người dùng không tồn tại
+
+##### POST /api/carts/user/{userId}
+
+- Thêm sản phẩm thành công
+- Thêm sản phẩm nhưng sản phẩm không tồn tại
+- Thêm sản phẩm nhưng số lượng sản phẩm bé hơn 0
+- Thêm sản phẩm nhưng số lượng sản phẩm bằng 0
+- Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại
+- Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ
+- Thêm sản phẩm nhưng người dùng không tồn tại
+- Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)
+- Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ
+
+##### PUT /api/carts/user/{userId}
+
+- Cập nhật sản phẩm thành công
+- Cập nhật sản phẩm nhưng sản phẩm không tồn tại
+- Cập nhật sản phẩm nhưng số lượng sản phẩm bé hơn 0
+- Cập nhật sản phẩm nhưng số lượng sản phẩm bằng 0
+- Cập nhật sản phẩm nhưng tồn kho của sản phẩm không tồn tại
+- Cập nhật sản phẩm nhưng tồn kho của sản phẩm không đủ
+- Cập nhật sản phẩm nhưng giỏ hàng của người dùng không tồn tại
+- Cập nhật sản phẩm nhưng sản phẩm không tồn tại trong giỏ
+
+##### DELETE /api/carts/user/{userId}
+
+- Xoá sản phẩm thành công
+- Xoá sản phẩm nhưng sản phẩm không tồn tại
+- Xoá sản phẩm nhưng giỏ hàng của người dùng không tồn tại
+- Xoá sản phẩm nhưng sản phẩm không tồn tại trong giỏ
 
 #### Phân công
 
-| Thành viên           | Method | Endpoint                 |
-| -------------------- | :----: | ------------------------ |
-| Trần Thanh Quy       |  GET   | /api/carts               |
-| Trần Thanh Quy       |  GET   | /api/carts/{id}          |
-| Trần Thanh Quy       |  GET   | /api/carts/user/{userId} |
-| Danh Thị Ngọc Châu   |  PUT   | /api/carts/user/{userId} | ✅ DONE |
-| Đỗ Nhật Huy          |  POST  | /api/carts/user/{userId} |
-| Nguyễn Đình Quốc Huy | DELETE | /api/carts/user/{userId} |
+| Thành viên           | Method | Endpoint                 | Test case |
+| -------------------- | :----: | ------------------------ | :-------: |
+| Trần Thanh Quy       |  GET   | /api/carts               |    All    |
+| Trần Thanh Quy       |  GET   | /api/carts/{id}          |    All    |
+| Trần Thanh Quy       |  GET   | /api/carts/user/{userId} |    All    |
+| Trần Thanh Quy       |  PUT   | /api/carts/user/{userId} |   7 → 8   |
+| Danh Thị Ngọc Châu   |  PUT   | /api/carts/user/{userId} |   1 → 6   |
+| Đỗ Nhật Huy          |  POST  | /api/carts/user/{userId} |    All    |
+| Nguyễn Đình Quốc Huy | DELETE | /api/carts/user/{userId} |    All    |
 
 ### OrderService
 
@@ -292,26 +369,74 @@ Verify repository interactions và kiểm tra dữ liệu sau khi service xử l
 
 #### Các service
 
-- getOrders()
-- getOrderById()
-- getOrderByUserId()
-- checkQuantityAndPriceBeforeOrder()
-- checkStockBeforeOrder()
-- calculateOrderTotal()
-- createOrder() ✅ DONE (Danh Thị Ngọc Châu)
-- cancelOrder()
+##### getOrders()
+
+- Truy danh sách đơn hàng thành công
+- Truy danh sách đơn hàng thành công (danh sách rỗng)
+
+##### getOrderById()
+
+- Truy một đơn hàng theo mã đơn hàng thành công
+- Truy một đơn hàng theo mã đơn hàng nhưng mã đơn hàng không tồn tại
+
+##### getOrdersByUserId()
+
+- Truy danh sách đơn hàng theo mã người dùng thành công
+- Truy danh sách đơn hàng theo mã người dùng thành công (danh sách rỗng)
+- Truy danh sách đơn hàng theo mã người dùng nhưng mã người dùng không tồn tại
+
+##### checkQuantityAndPriceBeforeOrder()
+
+- Kiểm tra danh sách chi tiết đơn hàng thành công
+- Kiểm tra danh sách chi tiết đơn hàng nhưng số lượng yêu cầu bé hơn 0
+- Kiểm tra danh sách chi tiết đơn hàng nhưng số lượng yêu cầu bằng 0
+- Kiểm tra danh sách chi tiết đơn hàng nhưng giá sản phẩm bé hơn 0
+
+##### checkStockBeforeOrder()
+
+- Kiểm tra tồn kho sản phẩm thành công
+- Kiểm tra tồn kho sản phẩm nhưng sản phẩm không tồn tại
+- Kiểm tra tồn kho sản phẩm nhưng tồn kho không tồn tại
+- Kiểm tra tồn kho sản phẩm nhưng tồn kho không đủ
+
+##### calculateOrderTotal()
+
+- Tính tổng tiền đơn hàng thành công
+
+##### createOrder()
+
+- Tạo đơn hàng thành công
+- Tạo đơn hàng nhưng sản phẩm không tồn tại
+- Tạo đơn hàng nhưng số lượng sản phẩm bé hơn 0
+- Tạo đơn hàng nhưng số lượng sản phẩm bằng 0
+- Tạo đơn hàng nhưng giá bán sản phẩm bé hơn 0
+- Tạo đơn hàng nhưng giá bán sản phẩm bằng 0
+- Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại
+- Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
+- Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
+- Tạo đơn hàng nhưng người dùng không tồn tại
+- Tạo đơn hàng nhưng mã giảm giá không tồn tại
+- Tạo đơn hàng nhưng mã giảm giá hết hạn
+
+##### cancelOrder()
+
+- Huỷ đơn hàng thành công
+- Huỷ đơn hàng nhưng đơn hàng của người dùng không tồn tại
+- Huỷ đơn hàng nhưng đơn hàng đã được huỷ từ trước
+- Huỷ đơn hàng nhưng số lượng sản phẩm bé hơn hoặc bằng (tăng tồn kho sản phẩm)
 
 #### Phân công
 
-| Thành viên           | Method                             |
-| -------------------- | ---------------------------------- |
-| Trần Thanh Quy       | checkQuantityAndPriceBeforeOrder() |
-| Trần Thanh Quy       | checkStockBeforeOrder()            |
-| Trần Thanh Quy       | calculateOrderTotal()              |
-| Danh Thị Ngọc Châu   | createOrder()                      | ✅ DONE |
-| Đỗ Nhật Huy          | cancelOrder()                      |
-| Nguyễn Đình Quốc Huy | getOrders()                        |
-| Nguyễn Đình Quốc Huy | getOrderById()                     |
-| Nguyễn Đình Quốc Huy | getOrderByUserId()                 |
+| Thành viên           | Method                             | Test case |
+| -------------------- | ---------------------------------- | :-------: |
+| Trần Thanh Quy       | getOrders()                        |    All    |
+| Trần Thanh Quy       | getOrderById()                     |    All    |
+| Trần Thanh Quy       | checkStockBeforeOrder()            |    All    |
+| Trần Thanh Quy       | calculateOrderTotal()              |    All    |
+| Danh Thị Ngọc Châu   | createOrder()                      |   1 → 6   |
+| Đỗ Nhật Huy          | getOrdersByUserId()                |    All    |
+| Đỗ Nhật Huy          | cancelOrder()                      |    All    |
+| Nguyễn Đình Quốc Huy | checkQuantityAndPriceBeforeOrder() |    All    |
+| Nguyễn Đình Quốc Huy | createOrder()                      |  7 → 12   |
 
 ---

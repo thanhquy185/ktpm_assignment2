@@ -1,3 +1,6 @@
+import { toast } from "react-toastify";
+import { HttpStatusCode } from "axios";
+import { OrderApi } from "../services/api/orderApi";
 import type { OrderType } from "../types/order";
 import { formatDate, formatPrice } from "../utils/priceCalculation";
 
@@ -32,15 +35,33 @@ const getStatusInfo = (status?: string) => {
 };
 
 type OrderItemComponentProps = {
+  userId: string;
   order: OrderType;
-  onCancel: (orderId: string) => void;
+  fetchOrdersByUserId: (userId: string) => Promise<void>;
 };
 
 const OrderItemComponent: React.FC<OrderItemComponentProps> = ({
+  userId,
   order,
-  onCancel,
+  fetchOrdersByUserId,
 }) => {
   const statusInfo = getStatusInfo(order.status);
+
+  const onCancelOrder = async (orderId: string) => {
+    const confirmCancel = window.confirm(
+      "Bạn có chắc muốn huỷ đơn hàng này không?",
+    );
+    if (!confirmCancel) return;
+
+    const response = await OrderApi.cancelOrder({ orderId: orderId });
+    if (response.status === HttpStatusCode.Ok && response.data) {
+      await fetchOrdersByUserId(userId);
+      toast.success("Huỷ đơn hàng thành công!");
+    } else if ((response as any).error) {
+      console.log("Huỷ đơn hàng thất bại!");
+      toast.error((response as any).message);
+    }
+  };
 
   return (
     <div key={order.id} className="rounded-3xl bg-white shadow p-6">
@@ -83,7 +104,7 @@ const OrderItemComponent: React.FC<OrderItemComponentProps> = ({
       {order.status === "Chờ xác nhận" && (
         <div className="mt-4 flex justify-end">
           <button
-            onClick={() => onCancel(order.id!)}
+            onClick={() => onCancelOrder(order.id!)}
             className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition"
           >
             Huỷ đơn

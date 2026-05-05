@@ -16,12 +16,16 @@ export interface OrderType {
   orderItems?: OrderItemType[];
 }
 
-export interface OrderRequest {
-  userId?: string;
+export interface OrderCreateRequest {
+  userId: string;
   couponId?: string;
-  shippingAddress?: string;
-  shippingMethod?: string;
-  shippingFee?: number;
-  paymentMethod?: string;
-  orderItems?: OrderItemRequest[];
+  shippingAddress: string;
+  shippingMethod: string;
+  shippingFee: number;
+  paymentMethod: string;
+  orderItems: OrderItemRequest[];
+}
+
+export interface OrderCancelRequest {
+  orderId: string;
 }
