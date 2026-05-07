@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +32,7 @@ import com.shopcart.exceptions.CartItemNotFound;
 import com.shopcart.exceptions.CartItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.InsufficientStock;
 import com.shopcart.services.CartService;
+import com.shopcart.dtos.request.CartItemRemoveFromCartRequest;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.is;
@@ -285,4 +287,149 @@ public class CartControllerMockTest {
                                 .andExpect(jsonPath("$.data.user", notNullValue()))
                                 .andExpect(jsonPath("$.data.cartItems").isArray());
         }
+
+        @Test
+        @DisplayName("TC1_RFC: DELETE /api/carts/user/{userId} - Xóa sản phẩm khỏi giỏ thành công (200 OK)")
+        void test_RemoveFromCart_Successful() throws Exception {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(productId.toString())
+                                .build();
+
+                // Giả lập Service xóa thành công (trả về null vì Controller không dùng giá trị trả về của removeFromCart)
+                when(this.cartService.removeFromCart(eq(userId), any(CartItemRemoveFromCartRequest.class)))
+                                .thenReturn(null);
+                // Giả lập Service lấy giỏ hàng sau khi xóa
+                when(this.cartService.getCartByUserId(userId))
+                                .thenReturn(this.fakeDataForTest.getCartFake1());
+
+                // Đóng giả Frontend gọi API DELETE
+                mockMvc.perform(delete("/api/carts/user/{userId}", userId.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(this.objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk()) // Kỳ vọng HTTP 200
+                                .andExpect(jsonPath("$.status", is(200)))
+                                .andExpect(jsonPath("$.message", is("Remove product from cart is successful!")))
+                                .andExpect(jsonPath("$.data", notNullValue()));
+
+                // Xác minh các hàm Service đã được Controller gọi
+                verify(this.cartService, times(1))
+                                .removeFromCart(eq(userId), any(CartItemRemoveFromCartRequest.class));
+                verify(this.cartService, times(1))
+                                .getCartByUserId(userId);
+        }
+
+        @Test
+        @DisplayName("TC2_RFC: DELETE /api/carts/user/{userId} - Thiếu productId trong Request (400 Bad Request)")
+        void test_RemoveFromCart_MissingProductId() throws Exception {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+
+                // Tạo request nhưng cố tình để productId là null
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(null)
+                                .build();
+
+                mockMvc.perform(delete("/api/carts/user/{userId}", userId.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(this.objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest()) // Lớp Validation (@Valid) sẽ chặn lại và trả 400
+                                .andExpect(jsonPath("$.status", is(400)));
+        }
+
+        @Test
+        @DisplayName("TC3_RFC: DELETE /api/carts/user/{userId} - Sản phẩm không tồn tại (404 Not Found)")
+        void test_RemoveFromCart_ProductNotFound() throws Exception {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(productId.toString())
+                                .build();
+
+                // Giả lập Service văng lỗi ProductNotFound
+                when(this.cartService.removeFromCart(eq(userId), any(CartItemRemoveFromCartRequest.class)))
+                                .thenThrow(new com.shopcart.exceptions.ProductNotFound(productId));
+
+                mockMvc.perform(delete("/api/carts/user/{userId}", userId.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(this.objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound()) // ExceptionHandler bắt lỗi và trả về 404
+                                .andExpect(jsonPath("$.status", is(404)))
+                                .andExpect(jsonPath("$.error", is("PRODUCT_NOT_FOUND")));
+        }
+
+        @Test
+        @DisplayName("TC4_RFC: DELETE /api/carts/user/{userId} - Giỏ hàng của user không tồn tại (404 Not Found)")
+        void test_RemoveFromCart_UserNotFoundInCart() throws Exception {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(productId.toString())
+                                .build();
+
+                // Giả lập Service văng lỗi UserNotFoundInCart
+                when(this.cartService.removeFromCart(eq(userId), any(CartItemRemoveFromCartRequest.class)))
+                                .thenThrow(new com.shopcart.exceptions.UserNotFoundInCart(userId));
+
+                mockMvc.perform(delete("/api/carts/user/{userId}", userId.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(this.objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status", is(404)))
+                                .andExpect(jsonPath("$.error", is("USER_NOT_FOUND_IN_CART")));
+        }
+
+        @Test
+        @DisplayName("TC5_RFC: DELETE /api/carts/user/{userId} - Sản phẩm không có trong giỏ (404 Not Found)")
+        void test_RemoveFromCart_CartItemNotFound() throws Exception {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                UUID cartId = this.fakeDataForTest.getCartIdFake1();
+
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(productId.toString())
+                                .build();
+
+                // Giả lập Service văng lỗi CartItemNotFound
+                when(this.cartService.removeFromCart(eq(userId), any(CartItemRemoveFromCartRequest.class)))
+                                .thenThrow(new CartItemNotFound(cartId, productId));
+
+                mockMvc.perform(delete("/api/carts/user/{userId}", userId.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(this.objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status", is(404)))
+                                .andExpect(jsonPath("$.error", is("CART_ITEM_NOT_FOUND")));
+        }
+
+        @Test
+        @DisplayName("TC6_RFC: DELETE /api/carts/user/{userId} - Kiểm tra cấu trúc JSON trả về hợp lệ")
+        void test_RemoveFromCart_VerifyResponseStructure() throws Exception {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
+                                .productId(productId.toString())
+                                .build();
+
+                when(this.cartService.removeFromCart(eq(userId), any(CartItemRemoveFromCartRequest.class)))
+                                .thenReturn(null);
+                when(this.cartService.getCartByUserId(userId))
+                                .thenReturn(this.fakeDataForTest.getCartFake1());
+
+                mockMvc.perform(delete("/api/carts/user/{userId}", userId.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(this.objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status", notNullValue()))
+                                .andExpect(jsonPath("$.message", notNullValue()))
+                                .andExpect(jsonPath("$.data", notNullValue()))
+                                .andExpect(jsonPath("$.data.id", notNullValue()))
+                                .andExpect(jsonPath("$.data.user", notNullValue()))
+                                .andExpect(jsonPath("$.data.cartItems").isArray());
+        }
+
 }

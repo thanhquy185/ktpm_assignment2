@@ -111,12 +111,12 @@ Coverage ≥ 85% cho CartService
 - TC7_UQ: Cập nhật sản phẩm nhưng giỏ hàng của người dùng không tồn tại
 - TC8_UQ: Cập nhật sản phẩm nhưng sản phẩm không tồn tại trong giỏ
 
-##### removeFromCart() Done ✅ (Nguyễn Đình Quốc Huy)
-Huy
-- TC1_RFC: Xoá sản phẩm thành công ✅
-- TC2_RFC: Xoá sản phẩm nhưng sản phẩm không tồn tại ✅ 
-- TC3_RFC: Xoá sản phẩm nhưng giỏ hàng của người dùng không tồn tại ✅
-- TC4_RFC: Xoá sản phẩm nhưng sản phẩm không tồn tại trong giỏ ✅
+##### removeFromCart() 
+
+- TC1_RFC: Xoá sản phẩm thành công 
+- TC2_RFC: Xoá sản phẩm nhưng sản phẩm không tồn tại 
+- TC3_RFC: Xoá sản phẩm nhưng giỏ hàng của người dùng không tồn tại 
+- TC4_RFC: Xoá sản phẩm nhưng sản phẩm không tồn tại trong giỏ 
 
 #### Phân công
 
@@ -126,7 +126,7 @@ Huy
 | Trần Thanh Quy       | updateQuantity() | TC7 → TC8 |
 | Danh Thị Ngọc Châu   | updateQuantity() | TC1 → TC6 |
 | Đỗ Nhật Huy          | addToCart()      | TC1 → TC6 |
-| Nguyễn Đình Quốc Huy | removeFromCart() | TC1 → TC4 |
+| Nguyễn Đình Quốc Huy | removeFromCart() | TC1 → TC4 | ✅
 
 ### OrderService
 
@@ -191,7 +191,7 @@ Coverage ≥ 85% cho OrderService
 | Trần Thanh Quy       | calculateOrderTotal()   |    TC1     |
 | Danh Thị Ngọc Châu   | createOrder()           | TC1 → TC6  |
 | Đỗ Nhật Huy          | cancelOrder()           | TC1 → TC4  |
-| Nguyễn Đình Quốc Huy | createOrder()           | TC7 → TC12 |
+| Nguyễn Đình Quốc Huy | createOrder()           | TC7 → TC12 | ✅
 
 ---
 
@@ -354,7 +354,7 @@ Verify mock interactions và kiểm tra phản hồi trả về từ controller 
 | Trần Thanh Quy       |  PUT   | /api/carts/user/{userId} |   7 → 8   |
 | Danh Thị Ngọc Châu   |  PUT   | /api/carts/user/{userId} |   1 → 6   |
 | Đỗ Nhật Huy          |  POST  | /api/carts/user/{userId} |    All    |
-| Nguyễn Đình Quốc Huy | DELETE | /api/carts/user/{userId} |    All    |
+| Nguyễn Đình Quốc Huy | DELETE | /api/carts/user/{userId} |    All    | ✅
 
 ### OrderService
 

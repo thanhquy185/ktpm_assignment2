@@ -3,9 +3,12 @@ package com.shopcart.mock;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 import java.util.List;
 import java.util.UUID;
@@ -308,5 +311,201 @@ public class OrderServiceMockTest {
                 assertNotNull(result);
                 assertEquals(0D, result.getDiscount());
                 verify(this.couponService, times(0)).getCouponById(org.mockito.ArgumentMatchers.any(UUID.class));
+        }
+
+        @Test
+        @DisplayName("TC2_CQAP: Kiểm tra danh sách chi tiết đơn hàng nhưng số lượng yêu cầu bé hơn 0")
+        void test_checkQuantityAndPrice_QuantityLessThanZero() {
+                List<OrderItemRequest> request = List.of(
+                                OrderItemRequest.builder()
+                                                .productId(UUID.randomUUID().toString())
+                                                .quantity(-1L) 
+                                                .price(30000000L)
+                                                .build());
+
+                assertThrows(com.shopcart.exceptions.OrderItemQuantityGreaterThanZero.class,
+                                () -> this.orderService.checkQuantityAndPriceBeforeOrder(request));
+        }
+
+        @Test
+        @DisplayName("TC3_CQAP: Kiểm tra danh sách chi tiết đơn hàng nhưng số lượng yêu cầu bằng 0")
+        void test_checkQuantityAndPrice_QuantityEqualsZero() {
+                List<OrderItemRequest> request = List.of(
+                                OrderItemRequest.builder()
+                                                .productId(UUID.randomUUID().toString())
+                                                .quantity(0L) 
+                                                .price(30000000L)
+                                                .build());
+
+                assertThrows(com.shopcart.exceptions.OrderItemQuantityGreaterThanZero.class,
+                                () -> this.orderService.checkQuantityAndPriceBeforeOrder(request));
+        }
+
+        @Test
+        @DisplayName("TC4_CQAP: Kiểm tra danh sách chi tiết đơn hàng nhưng giá sản phẩm bé hơn 0")
+        void test_checkQuantityAndPrice_PriceLessThanZero() {
+                List<OrderItemRequest> request = List.of(
+                                OrderItemRequest.builder()
+                                                .productId(UUID.randomUUID().toString())
+                                                .quantity(2L)
+                                                .price(-1000L) 
+                                                .build());
+
+                assertThrows(com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero.class,
+                                () -> this.orderService.checkQuantityAndPriceBeforeOrder(request));
+        }
+
+        @Test
+        @DisplayName("TC7_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại")
+        void test_CreateOrder_ButProductNotFoundInInventory() throws com.shopcart.exceptions.ProductNotFoundInInventory {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                product.setInventory(null); 
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .orderItems(List.of(OrderItemRequest.builder()
+                                                .productId(productId.toString())
+                                                .quantity(2L).price(30000000L).build()))
+                                .build();
+
+                when(this.productService.getProductById(productId)).thenReturn(product);
+
+                assertThrows(com.shopcart.exceptions.ProductNotFoundInInventory.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.orderRepository, times(0)).save(org.mockito.ArgumentMatchers.any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC8_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại")
+        void test_CreateOrder_ButProductNotFoundInStockCheck() throws com.shopcart.exceptions.ProductNotFound {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .orderItems(List.of(OrderItemRequest.builder()
+                                                .productId(productId.toString())
+                                                .quantity(2L).price(30000000L).build()))
+                                .build();
+
+                when(this.productService.getProductById(productId)).thenThrow(new com.shopcart.exceptions.ProductNotFound(productId));
+
+                assertThrows(com.shopcart.exceptions.ProductNotFound.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.orderRepository, times(0)).save(org.mockito.ArgumentMatchers.any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC9_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ")
+        void test_CreateOrder_ButInsufficientStock() throws com.shopcart.exceptions.InsufficientStock {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .orderItems(List.of(OrderItemRequest.builder()
+                                                .productId(productId.toString())
+                                                .quantity(999L).price(30000000L).build()))
+                                .build();
+
+                when(this.productService.getProductById(productId)).thenReturn(product);
+
+                assertThrows(com.shopcart.exceptions.InsufficientStock.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.orderRepository, times(0)).save(org.mockito.ArgumentMatchers.any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC10_CO: Tạo đơn hàng nhưng người dùng không tồn tại")
+        void test_CreateOrder_ButUserNotFound() throws com.shopcart.exceptions.UserNotFound {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .orderItems(List.of(OrderItemRequest.builder()
+                                                .productId(productId.toString())
+                                                .quantity(2L).price(30000000L).build()))
+                                .build();
+
+                when(this.productService.getProductById(productId)).thenReturn(product);
+                when(this.userService.getUserById(userId)).thenThrow(new com.shopcart.exceptions.UserNotFound(userId));
+
+                assertThrows(com.shopcart.exceptions.UserNotFound.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.orderRepository, times(0)).save(org.mockito.ArgumentMatchers.any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC11_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại")
+        void test_CreateOrder_ButCouponNotFound() throws com.shopcart.exceptions.CouponNotFound {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                UUID couponId = UUID.randomUUID();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(couponId.toString())
+                                .orderItems(List.of(OrderItemRequest.builder()
+                                                .productId(productId.toString())
+                                                .quantity(2L).price(30000000L).build()))
+                                .build();
+
+                when(this.productService.getProductById(productId)).thenReturn(product);
+                when(this.userService.getUserById(userId)).thenReturn(this.fakeDataForTest.getUserFake1());
+                when(this.couponService.getCouponById(couponId)).thenThrow(new com.shopcart.exceptions.CouponNotFound(couponId));
+
+                assertThrows(com.shopcart.exceptions.CouponNotFound.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.orderRepository, times(0)).save(org.mockito.ArgumentMatchers.any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC12_CO: Tạo đơn hàng nhưng mã giảm giá hết hạn")
+        void test_CreateOrder_ButCouponOutOfDate() {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+                Product product = this.fakeDataForTest.getProductFake1();
+                com.shopcart.entities.Coupon coupon = this.fakeDataForTest.getCouponFake1();
+                UUID couponId = coupon.getId();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .couponId(couponId.toString())
+                                .orderItems(List.of(OrderItemRequest.builder()
+                                                .productId(productId.toString())
+                                                .quantity(2L).price(30000000L).build()))
+                                .build();
+
+                when(this.productService.getProductById(productId)).thenReturn(product);
+                when(this.userService.getUserById(userId)).thenReturn(this.fakeDataForTest.getUserFake1());
+                when(this.couponService.getCouponById(couponId)).thenReturn(coupon);
+                doThrow(new com.shopcart.exceptions.CouponOutOfDate(coupon.getCode()))
+                                .when(this.couponService).checkOutOfDate(
+                                                org.mockito.ArgumentMatchers.any(),
+                                                org.mockito.ArgumentMatchers.any(),
+                                                org.mockito.ArgumentMatchers.any(),
+                                                org.mockito.ArgumentMatchers.any());
+
+                assertThrows(com.shopcart.exceptions.CouponOutOfDate.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.orderRepository, times(0)).save(org.mockito.ArgumentMatchers.any(Order.class));
         }
 }
