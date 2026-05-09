@@ -43,7 +43,7 @@ public class OrderService {
         return this.orderRepository.findById(id).orElseThrow(() -> new OrderNotFound(id));
     }
 
-    public List<Order> getOrderByUserId(UUID userId) {
+    public List<Order> getOrdersByUserId(UUID userId) {
         return this.orderRepository.findByUserId(userId);
     }
 
@@ -52,7 +52,7 @@ public class OrderService {
             if (orderItem.getQuantity() <= 0) {
                 throw new OrderItemQuantityGreaterThanZero();
             }
-            if (orderItem.getPrice() < 0) {
+            if (orderItem.getPrice() <= 0) {
                 throw new OrderItemPriceGreaterThanOrEqualZero();
             }
         });
