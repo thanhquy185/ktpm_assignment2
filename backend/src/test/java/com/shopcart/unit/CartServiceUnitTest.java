@@ -576,100 +576,7 @@ public class CartServiceUnitTest {
         }
 
         @Test
-        @DisplayName("TC2_ATC: Thêm sản phẩm nhưng sản phẩm không tồn tại")
-        void addToCart_WhenProductNotFound_ShouldThrowProductNotFoundException() {
-                // Arrange
-                UUID userId = fakeDataForTest.getUserIdFake1();
-                UUID productId = fakeDataForTest.getProductIdFake5();
-
-                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
-                                .productId(productId.toString())
-                                .quantity(2L)
-                                .build();
-                when(productService.getProductById(productId))
-                                .thenThrow(new ProductNotFound(productId));
-                // Act + Assert
-                assertThrows(ProductNotFound.class,
-                                () -> cartService.addToCart(userId, request));
-
-                verify(productService).getProductById(productId);
-                verifyNoInteractions(cartRepository);
-                verifyNoInteractions(cartItemRepository);
-        }
-
-        @DisplayName("TC3_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn hoặc bằng 0")
-        @ParameterizedTest
-        @ValueSource(longs = { -3L, -2L, -1L, 0L })
-        void addToCart_WhenQuantityLessThanOrEqualsZero_ShouldThrowCartItemQuantityGreaterThanZeroException(
-                        Long quantity) {
-                // Arrange
-                UUID userId = fakeDataForTest.getUserIdFake1();
-                Product product = fakeDataForTest.getProductFake1();
-                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
-                                .productId(product.getId().toString())
-                                .quantity(quantity)
-                                .build();
-                when(productService.getProductById(product.getId()))
-                                .thenReturn(product);
-
-                // Act + Assert
-                assertThrows(CartItemQuantityGreaterThanZero.class,
-                                () -> cartService.addToCart(userId, request));
-
-                verify(productService).getProductById(product.getId());
-                verifyNoInteractions(cartRepository);
-                verifyNoInteractions(cartItemRepository);
-        }
-
-        @Test
-        @DisplayName("TC4_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại")
-        void addToCart_WhenInventoryNotFound_ShouldThrowProductNotFoundInInventoryException() {
-                // Arrange
-                UUID userId = fakeDataForTest.getUserIdFake1();
-                Product product = fakeDataForTest.getProductFake1();
-                product.setInventory(null);
-                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
-                                .productId(product.getId().toString())
-                                .quantity(2L)
-                                .build();
-                when(productService.getProductById(product.getId()))
-                                .thenReturn(product);
-
-                // Act + Assert
-                assertThrows(ProductNotFoundInInventory.class,
-                                () -> cartService.addToCart(userId, request));
-
-                verify(productService).getProductById(product.getId());
-                verifyNoInteractions(cartRepository);
-                verifyNoInteractions(cartItemRepository);
-        }
-
-        @DisplayName("TC5_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ")
-        @ParameterizedTest
-        @ValueSource(longs = { 6L, 7L, 10L, 100L })
-        // Tồn kho của productFake1 là 5
-        void addToCart_WhenInventoryIsInsufficient_ShouldThrowInsufficientStockException(Long quantity) {
-                // Arrange
-                UUID userId = fakeDataForTest.getUserIdFake1();
-                Product product = fakeDataForTest.getProductFake1();
-                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
-                                .productId(product.getId().toString())
-                                .quantity(quantity)
-                                .build();
-                when(productService.getProductById(product.getId()))
-                                .thenReturn(product);
-
-                // Act + Assert
-                assertThrows(InsufficientStock.class,
-                                () -> cartService.addToCart(userId, request));
-
-                verify(productService).getProductById(product.getId());
-                verifyNoInteractions(cartRepository);
-                verifyNoInteractions(cartItemRepository);
-        }
-
-        @Test
-        @DisplayName("TC9_ATC: Thêm sản phẩm thành công vào giỏ hàng, cập nhật tổng trong giỏ hàng")
+        @DisplayName("TC2_ATC: Thêm sản phẩm thành công vào giỏ hàng, cập nhật tổng trong giỏ hàng")
         void addToCart_WhenCartHasItemsAndProductIsNotDuplicate_ShouldUpdateTotalQuantityAndPrice() {
                 // Arrange
                 UUID userId = fakeDataForTest.getUserIdFake1();
@@ -733,4 +640,98 @@ public class CartServiceUnitTest {
                 assertEquals(oldTotalQuantity + 2L, updatedCart.getTotalQuantity());
                 assertEquals(oldTotalPrice + 2L * product.getPrice(), updatedCart.getTotalPrice());
         }
+
+        @Test
+        @DisplayName("TC3_ATC: Thêm sản phẩm nhưng sản phẩm không tồn tại")
+        void addToCart_WhenProductNotFound_ShouldThrowProductNotFoundException() {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                UUID productId = fakeDataForTest.getProductIdFake5();
+
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(productId.toString())
+                                .quantity(2L)
+                                .build();
+                when(productService.getProductById(productId))
+                                .thenThrow(new ProductNotFound(productId));
+                // Act + Assert
+                assertThrows(ProductNotFound.class,
+                                () -> cartService.addToCart(userId, request));
+
+                verify(productService).getProductById(productId);
+                verifyNoInteractions(cartRepository);
+                verifyNoInteractions(cartItemRepository);
+        }
+
+        @DisplayName("TC4_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn hoặc bằng 0")
+        @ParameterizedTest
+        @ValueSource(longs = { -3L, -2L, -1L, 0L })
+        void addToCart_WhenQuantityLessThanOrEqualsZero_ShouldThrowCartItemQuantityGreaterThanZeroException(
+                        Long quantity) {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(quantity)
+                                .build();
+                when(productService.getProductById(product.getId()))
+                                .thenReturn(product);
+
+                // Act + Assert
+                assertThrows(CartItemQuantityGreaterThanZero.class,
+                                () -> cartService.addToCart(userId, request));
+
+                verify(productService).getProductById(product.getId());
+                verifyNoInteractions(cartRepository);
+                verifyNoInteractions(cartItemRepository);
+        }
+
+        @Test
+        @DisplayName("TC5_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại")
+        void addToCart_WhenInventoryNotFound_ShouldThrowProductNotFoundInInventoryException() {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                product.setInventory(null);
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(2L)
+                                .build();
+                when(productService.getProductById(product.getId()))
+                                .thenReturn(product);
+
+                // Act + Assert
+                assertThrows(ProductNotFoundInInventory.class,
+                                () -> cartService.addToCart(userId, request));
+
+                verify(productService).getProductById(product.getId());
+                verifyNoInteractions(cartRepository);
+                verifyNoInteractions(cartItemRepository);
+        }
+
+        @DisplayName("TC6_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ")
+        @ParameterizedTest
+        @ValueSource(longs = { 6L, 7L, 10L, 100L })
+        // Tồn kho của productFake1 là 5
+        void addToCart_WhenInventoryIsInsufficient_ShouldThrowInsufficientStockException(Long quantity) {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(quantity)
+                                .build();
+                when(productService.getProductById(product.getId()))
+                                .thenReturn(product);
+
+                // Act + Assert
+                assertThrows(InsufficientStock.class,
+                                () -> cartService.addToCart(userId, request));
+
+                verify(productService).getProductById(product.getId());
+                verifyNoInteractions(cartRepository);
+                verifyNoInteractions(cartItemRepository);
+        }
+
 }
