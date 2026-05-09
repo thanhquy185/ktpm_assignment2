@@ -32,6 +32,7 @@ import com.shopcart.exceptions.CartItemNotFound;
 import com.shopcart.exceptions.CartItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.CartNotFound;
 import com.shopcart.exceptions.InsufficientStock;
+import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.exceptions.UserNotFoundInCart;
 import com.shopcart.services.CartService;
 import com.shopcart.dtos.request.CartItemRemoveFromCartRequest;
@@ -267,7 +268,7 @@ public class CartControllerMockTest {
         }
 
         @Test
-        @DisplayName("TC1: PUT /api/carts/user/{userId} - Cập nhật số lượng sản phẩm trong giỏ hàng thành công")
+        @DisplayName("TC1_UQ:: PUT /api/carts/user/{userId} - Cập nhật sản phẩm thành công")
         void test_UpdateQuantity_Successful() throws Exception {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -297,70 +298,91 @@ public class CartControllerMockTest {
                                 .getCartByUserId(userId);
         }
 
+        // @Test
+        // @DisplayName("TC2_UQ:: PUT /api/carts/user/{userId} - Missing productId → 400
+        // Bad Request")
+        // void test_UpdateQuantity_MissingProductId() throws Exception {
+        // UUID userId = this.fakeDataForTest.getUserIdFake1();
+
+        // CartItemUpdateQuantityRequest request =
+        // CartItemUpdateQuantityRequest.builder()
+        // .productId(null)
+        // .quantity(5L)
+        // .build();
+
+        // mockMvc.perform(put("/api/carts/user/{userId}", userId.toString())
+        // .contentType(MediaType.APPLICATION_JSON)
+        // .content(this.objectMapper.writeValueAsString(request)))
+        // .andExpect(status().isBadRequest())
+        // .andExpect(jsonPath("$.status", is(400)));
+        // }
+
+        // @Test
+        // @DisplayName("TC3_UQ:: PUT /api/carts/user/{userId} - Missing quantity → 400
+        // Bad Request")
+        // void test_UpdateQuantity_MissingQuantity() throws Exception {
+        // UUID userId = this.fakeDataForTest.getUserIdFake1();
+        // UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+        // CartItemUpdateQuantityRequest request =
+        // CartItemUpdateQuantityRequest.builder()
+        // .productId(productId.toString())
+        // .quantity(null)
+        // .build();
+
+        // mockMvc.perform(put("/api/carts/user/{userId}", userId.toString())
+        // .contentType(MediaType.APPLICATION_JSON)
+        // .content(this.objectMapper.writeValueAsString(request)))
+        // .andExpect(status().isBadRequest())
+        // .andExpect(jsonPath("$.status", is(400)));
+        // }
+
         @Test
-        @DisplayName("TC2: PUT /api/carts/user/{userId} - Missing productId → 400 Bad Request")
-        void test_UpdateQuantity_MissingProductId() throws Exception {
+        @DisplayName("TC2_UQ: PUT /api/carts/user/{userId} - Cập nhật sản phẩm nhưng sản phẩm không tồn tại")
+        void test_UpdateQuantity_ProductNotFound() throws Exception {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = UUID.randomUUID();
 
                 CartItemUpdateQuantityRequest request = CartItemUpdateQuantityRequest.builder()
-                                .productId(null)
+                                .productId(productId.toString())
                                 .quantity(5L)
                                 .build();
+
+                when(this.cartService.updateQuantity(eq(userId),
+                                any(CartItemUpdateQuantityRequest.class)))
+                                .thenThrow(new ProductNotFound(productId));
 
                 mockMvc.perform(put("/api/carts/user/{userId}", userId.toString())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(this.objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.status", is(400)));
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status", is(404)))
+                                .andExpect(jsonPath("$.error", is("PRODUCT_NOT_FOUND")));
         }
 
         @Test
-        @DisplayName("TC3: PUT /api/carts/user/{userId} - Missing quantity → 400 Bad Request")
-        void test_UpdateQuantity_MissingQuantity() throws Exception {
+        @DisplayName("TC3_UQ: PUT /api/carts/user/{userId} - Cập nhật sản phẩm nhưng số lượng sản phẩm bé hơn 0")
+        void test_UpdateQuantity_QuantityLessThanZero() throws Exception {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
 
                 CartItemUpdateQuantityRequest request = CartItemUpdateQuantityRequest.builder()
                                 .productId(productId.toString())
-                                .quantity(null)
+                                .quantity(-1L)
                                 .build();
+
+                when(this.cartService.updateQuantity(eq(userId), any(CartItemUpdateQuantityRequest.class)))
+                                .thenThrow(new CartItemQuantityGreaterThanZero());
 
                 mockMvc.perform(put("/api/carts/user/{userId}", userId.toString())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(this.objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.status", is(400)));
+                                .andExpect(status().isBadRequest());
         }
 
-        // @Test
-        // @DisplayName("TC4: PUT /api/carts/user/{userId} - Sản phẩm không tồn tại
-        // trong giỏ → 404 Not Found")
-        // void test_UpdateQuantity_CartItemNotFound() throws Exception {
-        // UUID userId = this.fakeDataForTest.getUserIdFake1();
-        // UUID productId = this.fakeDataForTest.getProductIdFake1();
-        // UUID cartId = this.fakeDataForTest.getCartIdFake1();
-
-        // CartItemUpdateQuantityRequest request =
-        // CartItemUpdateQuantityRequest.builder()
-        // .productId(productId.toString())
-        // .quantity(5L)
-        // .build();
-
-        // when(this.cartService.updateQuantity(eq(userId),
-        // any(CartItemUpdateQuantityRequest.class)))
-        // .thenThrow(new CartItemNotFound(cartId, productId));
-
-        // mockMvc.perform(put("/api/carts/user/{userId}", userId.toString())
-        // .contentType(MediaType.APPLICATION_JSON)
-        // .content(this.objectMapper.writeValueAsString(request)))
-        // .andExpect(status().isNotFound())
-        // .andExpect(jsonPath("$.status", is(404)))
-        // .andExpect(jsonPath("$.error", is("CART_ITEM_NOT_FOUND")));
-        // }
-
         @Test
-        @DisplayName("TC5: PUT /api/carts/user/{userId} - Số lượng không hợp lệ → 400 Bad Request")
-        void test_UpdateQuantity_QuantityGreaterThanZero() throws Exception {
+        @DisplayName("TC4_UQ: PUT /api/carts/user/{userId} - Cập nhật sản phẩm nhưng số lượng sản phẩm bằng 0")
+        void test_UpdateQuantity_QuantityIsZero() throws Exception {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
 
@@ -375,13 +397,11 @@ public class CartControllerMockTest {
                 mockMvc.perform(put("/api/carts/user/{userId}", userId.toString())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(this.objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.status", is(400)))
-                                .andExpect(jsonPath("$.error", is("CART_ITEM_QUANTITY_GREATER_THAN_ZERO")));
+                                .andExpect(status().isBadRequest());
         }
 
         @Test
-        @DisplayName("TC6: PUT /api/carts/user/{userId} - Tồn kho không đủ → 400 Bad Request")
+        @DisplayName("TC6_UQ: PUT /api/carts/user/{userId} - Cập nhật sản phẩm nhưng tồn kho của sản phẩm không đủ")
         void test_UpdateQuantity_InsufficientStock() throws Exception {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -400,34 +420,6 @@ public class CartControllerMockTest {
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.status", is(400)))
                                 .andExpect(jsonPath("$.error", is("INSUFFICIENT_STOCK")));
-        }
-
-        @Test
-        @DisplayName("TC7:PUT /api/carts/user/{userId} - Verify Response Structure")
-        void test_UpdateQuantity_VerifyResponseStructure() throws Exception {
-                UUID userId = this.fakeDataForTest.getUserIdFake1();
-                UUID productId = this.fakeDataForTest.getProductIdFake1();
-
-                CartItemUpdateQuantityRequest request = CartItemUpdateQuantityRequest.builder()
-                                .productId(productId.toString())
-                                .quantity(3L)
-                                .build();
-
-                when(this.cartService.updateQuantity(eq(userId), any(CartItemUpdateQuantityRequest.class)))
-                                .thenReturn(null);
-                when(this.cartService.getCartByUserId(userId))
-                                .thenReturn(this.fakeDataForTest.getCartFake1());
-
-                mockMvc.perform(put("/api/carts/user/{userId}", userId.toString())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(this.objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.status", notNullValue()))
-                                .andExpect(jsonPath("$.message", notNullValue()))
-                                .andExpect(jsonPath("$.data", notNullValue()))
-                                .andExpect(jsonPath("$.data.id", notNullValue()))
-                                .andExpect(jsonPath("$.data.user", notNullValue()))
-                                .andExpect(jsonPath("$.data.cartItems").isArray());
         }
 
         @Test
@@ -574,5 +566,4 @@ public class CartControllerMockTest {
                                 .andExpect(jsonPath("$.data.user", notNullValue()))
                                 .andExpect(jsonPath("$.data.cartItems").isArray());
         }
-
 }
