@@ -31,14 +31,9 @@ import com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero;
 import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.services.OrderService;
-import com.shopcart.dtos.request.OrderCreateRequest;
-import com.shopcart.dtos.request.OrderItemRequest;
-import com.shopcart.enums.OrderPaymentMethodEnum;
-import com.shopcart.enums.OrderShippingMethodEnum;
 import com.shopcart.exceptions.CouponNotFound;
 import com.shopcart.exceptions.CouponOutOfDate;
 import com.shopcart.exceptions.InsufficientStock;
-import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.exceptions.ProductNotFoundInInventory;
 import com.shopcart.exceptions.UserNotFound;
 
@@ -154,7 +149,7 @@ public class OrderControllerIntegrationTest {
                                 .build();
 
                 when(orderService.createOrder(any(OrderCreateRequest.class)))
-                                .thenThrow(new OrderItemQuantityGreaterThanZero("Quantity must be greater than zero"));
+                                .thenThrow(new OrderItemQuantityGreaterThanZero());
 
                 mockMvc.perform(post("/api/orders")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -182,7 +177,7 @@ public class OrderControllerIntegrationTest {
                                 .build();
 
                 when(orderService.createOrder(any(OrderCreateRequest.class)))
-                                .thenThrow(new OrderItemQuantityGreaterThanZero("Quantity must be greater than zero"));
+                                .thenThrow(new OrderItemQuantityGreaterThanZero());
 
                 mockMvc.perform(post("/api/orders")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -210,8 +205,7 @@ public class OrderControllerIntegrationTest {
                                 .build();
 
                 when(orderService.createOrder(any(OrderCreateRequest.class)))
-                                .thenThrow(new OrderItemPriceGreaterThanOrEqualZero(
-                                                "Price must be greater than or equal to zero"));
+                                .thenThrow(new OrderItemPriceGreaterThanOrEqualZero());
 
                 mockMvc.perform(post("/api/orders")
                                 .contentType(MediaType.APPLICATION_JSON)
