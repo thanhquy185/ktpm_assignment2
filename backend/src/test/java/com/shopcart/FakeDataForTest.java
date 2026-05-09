@@ -302,6 +302,8 @@ public class FakeDataForTest {
                                 .product(this.productFake1)
                                 .build();
                 this.cartFake1.setCartItems(List.<CartItem>of(this.cartItemFake1));
+                this.cartFake1.setTotalPrice(cartItemFake1.getQuantity() * cartItemFake1.getPrice());
+                this.cartFake1.setTotalQuantity(cartItemFake1.getQuantity());
         }
 
         private void fakeCartsData() {
