@@ -52,7 +52,7 @@ public class OrderService {
             if (orderItem.getQuantity() <= 0) {
                 throw new OrderItemQuantityGreaterThanZero();
             }
-            if (orderItem.getPrice() < 0) {
+            if (orderItem.getPrice() <= 0) {
                 throw new OrderItemPriceGreaterThanOrEqualZero();
             }
         });

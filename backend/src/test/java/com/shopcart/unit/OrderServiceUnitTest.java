@@ -27,14 +27,18 @@ import com.shopcart.dtos.request.OrderCreateRequest;
 import com.shopcart.entities.Coupon;
 import com.shopcart.entities.Order;
 import com.shopcart.entities.Product;
+import com.shopcart.entities.User;
 import com.shopcart.enums.OrderPaymentMethodEnum;
 import com.shopcart.enums.OrderShippingMethodEnum;
+import com.shopcart.exceptions.CouponNotFound;
+import com.shopcart.exceptions.CouponOutOfDate;
 import com.shopcart.exceptions.InsufficientStock;
 import com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero;
 import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.OrderNotFound;
 import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.exceptions.ProductNotFoundInInventory;
+import com.shopcart.exceptions.UserNotFound;
 import com.shopcart.repositories.OrderRepository;
 import com.shopcart.services.CartService;
 import com.shopcart.services.CouponService;
@@ -214,12 +218,15 @@ public class OrderServiceUnitTest {
         @DisplayName("TC1_CO: Tạo đơn thành công")
         void test_CreateOrder_Successful() {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
+                User user = this.fakeDataForTest.getUserFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
+                UUID couponId = this.fakeDataForTest.getCouponIdFake1();
+                Coupon coupon = this.fakeDataForTest.getCouponFake1();
 
                 OrderCreateRequest request = OrderCreateRequest.builder()
                                 .userId(userId.toString())
-                                .couponId(null)
+                                .couponId(couponId.toString())
                                 .shippingAddress("Trường Đại học Sài Gọn")
                                 .shippingMethod(OrderShippingMethodEnum.STANDARD)
                                 .shippingFee(10000L)
@@ -234,18 +241,23 @@ public class OrderServiceUnitTest {
 
                 Order expectedOrder = Order.builder()
                                 .id(UUID.randomUUID())
-                                .user(this.fakeDataForTest.getUserFake1())
+                                .user(user)
+                                .coupon(coupon)
                                 .shippingAddress("Trường Đại học Sài Gọn")
                                 .subtotal(60000000L)
                                 .shippingFee(10000L)
-                                .discount(0D)
-                                .totalPrice(60010000D)
+                                .discount(6000000D)
+                                .totalPrice(54010000D)
                                 .build();
 
                 when(this.productService.getProductById(productId))
                                 .thenReturn(product);
                 when(this.userService.getUserById(userId))
-                                .thenReturn(this.fakeDataForTest.getUserFake1());
+                                .thenReturn(user);
+                when(this.couponService.getCouponById(couponId))
+                                .thenReturn(coupon);
+                when(this.couponService.calculateDiscount(coupon.getType().getValue(), coupon.getDiscount(), 60000000L))
+                                .thenReturn(6000000D);
                 when(this.orderRepository.save(any(Order.class)))
                                 .thenReturn(expectedOrder);
 
@@ -258,9 +270,12 @@ public class OrderServiceUnitTest {
                 assertEquals(expectedOrder.getShippingFee(), createdOrder.getShippingFee());
 
                 verify(this.productService, times(2)).getProductById(productId);
-                verify(this.userService, times(1)).getUserById(userId);
                 verify(this.inventoryService, times(1)).decreaseStock(productId, 2L);
+                verify(this.userService, times(1)).getUserById(userId);
                 verify(this.cartService, times(1)).clearCart(userId);
+                verify(this.couponService, times(1)).getCouponById(couponId);
+                verify(this.couponService, times(1)).calculateDiscount(coupon.getType().getValue(),
+                                coupon.getDiscount(), 60000000L);
                 verify(this.orderRepository, times(1)).save(any(Order.class));
         }
 
@@ -438,7 +453,7 @@ public class OrderServiceUnitTest {
 
         @Test
         @DisplayName("TC9_CO: Tạo đơn hàng nhưng người dùng không tồn tại")
-        void test_CreateOrder_ButUserNotFound() throws com.shopcart.exceptions.UserNotFound {
+        void test_CreateOrder_ButUserNotFound() throws UserNotFound {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
@@ -451,16 +466,16 @@ public class OrderServiceUnitTest {
                                 .build();
 
                 when(this.productService.getProductById(productId)).thenReturn(product);
-                when(this.userService.getUserById(userId)).thenThrow(new com.shopcart.exceptions.UserNotFound(userId));
+                when(this.userService.getUserById(userId)).thenThrow(new UserNotFound(userId));
 
-                assertThrows(com.shopcart.exceptions.UserNotFound.class, () -> {
+                assertThrows(UserNotFound.class, () -> {
                         this.orderService.createOrder(request);
                 });
         }
 
         @Test
         @DisplayName("TC10_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại")
-        void test_CreateOrder_ButCouponNotFound() throws com.shopcart.exceptions.CouponNotFound {
+        void test_CreateOrder_ButCouponNotFound() throws CouponNotFound {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
@@ -477,9 +492,9 @@ public class OrderServiceUnitTest {
                 when(this.productService.getProductById(productId)).thenReturn(product);
                 when(this.userService.getUserById(userId)).thenReturn(this.fakeDataForTest.getUserFake1());
                 when(this.couponService.getCouponById(couponId))
-                                .thenThrow(new com.shopcart.exceptions.CouponNotFound(couponId));
+                                .thenThrow(new CouponNotFound(couponId));
 
-                assertThrows(com.shopcart.exceptions.CouponNotFound.class, () -> {
+                assertThrows(CouponNotFound.class, () -> {
                         this.orderService.createOrder(request);
                 });
         }
@@ -505,10 +520,10 @@ public class OrderServiceUnitTest {
                 when(this.userService.getUserById(userId)).thenReturn(this.fakeDataForTest.getUserFake1());
                 when(this.couponService.getCouponById(couponId)).thenReturn(coupon);
 
-                doThrow(new com.shopcart.exceptions.CouponOutOfDate(coupon.getCode()))
+                doThrow(new CouponOutOfDate(coupon.getCode()))
                                 .when(this.couponService).checkOutOfDate(any(), any(), any(), any());
 
-                assertThrows(com.shopcart.exceptions.CouponOutOfDate.class, () -> {
+                assertThrows(CouponOutOfDate.class, () -> {
                         this.orderService.createOrder(request);
                 });
         }

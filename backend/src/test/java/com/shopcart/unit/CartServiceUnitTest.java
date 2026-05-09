@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -182,7 +183,7 @@ public class CartServiceUnitTest {
 
         @Test
         @DisplayName("TC7_UQ: Cập nhật sản phẩm nhưng giỏ hàng của người dùng không tồn tại")
-        void test_UpdateQuantity_ButUserNotFound() throws UserNotFoundInCart {
+        void test_UpdateQuantity_ButUserNotFoundInCart() throws UserNotFoundInCart {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
@@ -204,6 +205,7 @@ public class CartServiceUnitTest {
                                 .getProductById(UUID.fromString(request.getProductId()));
                 verify(this.cartRepository, times(1))
                                 .findByUserId(userId);
+                verify(this.cartRepository, never()).save(any(Cart.class));
         }
 
         @Test
@@ -222,8 +224,8 @@ public class CartServiceUnitTest {
                                 .thenReturn(product);
                 when(this.cartRepository.findByUserId(userId))
                                 .thenReturn(Optional.of(cart));
-                when(this.cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()))
-                                .thenThrow(new CartItemNotFound(cart.getId(), product.getId()));
+                when(this.cartItemRepository.findByCartIdAndProductId(cart.getId(), productId))
+                                .thenReturn(Optional.empty());
 
                 assertThrows(CartItemNotFound.class, () -> {
                         this.cartService.updateQuantity(userId, request);
@@ -234,7 +236,8 @@ public class CartServiceUnitTest {
                 verify(this.cartRepository, times(1))
                                 .findByUserId(userId);
                 verify(this.cartItemRepository, times(1))
-                                .findByCartIdAndProductId(cart.getId(), product.getId());
+                                .findByCartIdAndProductId(cart.getId(), UUID.fromString(request.getProductId()));
+                verify(this.cartRepository, never()).save(any(Cart.class));
         }
 
         @Test
