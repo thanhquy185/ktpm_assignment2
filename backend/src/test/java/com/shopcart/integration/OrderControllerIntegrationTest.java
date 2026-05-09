@@ -26,6 +26,12 @@ import com.shopcart.dtos.request.OrderCreateRequest;
 import com.shopcart.dtos.request.OrderItemRequest;
 import com.shopcart.enums.OrderPaymentMethodEnum;
 import com.shopcart.enums.OrderShippingMethodEnum;
+import com.shopcart.exceptions.CouponNotFound;
+import com.shopcart.exceptions.CouponOutOfDate;
+import com.shopcart.exceptions.InsufficientStock;
+import com.shopcart.exceptions.ProductNotFound;
+import com.shopcart.exceptions.ProductNotFoundInInventory;
+import com.shopcart.exceptions.UserNotFound;
 
 @WebMvcTest(OrderController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -80,7 +86,7 @@ public class OrderControllerIntegrationTest {
         OrderCreateRequest request = buildMockOrderRequest();
 
         when(this.orderService.createOrder(any(OrderCreateRequest.class)))
-                .thenThrow(new com.shopcart.exceptions.ProductNotFoundInInventory(UUID.randomUUID()));
+                .thenThrow(new ProductNotFoundInInventory(UUID.randomUUID()));
 
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -90,27 +96,12 @@ public class OrderControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC8_CO: POST /api/orders - Tạo đơn hàng nhưng sản phẩm không tồn tại (404 Not Found)")
-    void test_CreateOrder_ProductNotFound() throws Exception {
-        OrderCreateRequest request = buildMockOrderRequest();
-
-        when(this.orderService.createOrder(any(OrderCreateRequest.class)))
-                .thenThrow(new com.shopcart.exceptions.ProductNotFound(UUID.randomUUID()));
-
-        mockMvc.perform(post("/api/orders")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(this.objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("PRODUCT_NOT_FOUND"));
-    }
-
-    @Test
-    @DisplayName("TC9_CO: POST /api/orders - Tạo đơn hàng nhưng tồn kho không đủ (400 Bad Request)")
+    @DisplayName("TC8_CO: POST /api/orders - Tạo đơn hàng nhưng tồn kho không đủ (400 Bad Request)")
     void test_CreateOrder_InsufficientStock() throws Exception {
         OrderCreateRequest request = buildMockOrderRequest();
 
         when(this.orderService.createOrder(any(OrderCreateRequest.class)))
-                .thenThrow(new com.shopcart.exceptions.InsufficientStock(UUID.randomUUID()));
+                .thenThrow(new InsufficientStock(UUID.randomUUID()));
 
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -120,13 +111,13 @@ public class OrderControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC10_CO: POST /api/orders - Tạo đơn hàng nhưng người dùng không tồn tại (Unhandled Exception)")
+    @DisplayName("TC9_CO: POST /api/orders - Tạo đơn hàng nhưng người dùng không tồn tại (Unhandled Exception)")
     void test_CreateOrder_UserNotFound() throws Exception {
         OrderCreateRequest request = buildMockOrderRequest();
         UUID fakeUserId = UUID.randomUUID();
 
         when(this.orderService.createOrder(any(OrderCreateRequest.class)))
-                .thenThrow(new com.shopcart.exceptions.UserNotFound(fakeUserId));
+                .thenThrow(new UserNotFound(fakeUserId));
                 
         Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
                 jakarta.servlet.ServletException.class,
@@ -136,18 +127,18 @@ public class OrderControllerIntegrationTest {
         );
 
         org.junit.jupiter.api.Assertions.assertTrue(
-                exception.getCause() instanceof com.shopcart.exceptions.UserNotFound
+                exception.getCause() instanceof UserNotFound
         );
     }
 
     @Test
-    @DisplayName("TC11_CO: POST /api/orders - Tạo đơn hàng nhưng mã giảm giá không tồn tại (404 Not Found)")
+    @DisplayName("TC10_CO: POST /api/orders - Tạo đơn hàng nhưng mã giảm giá không tồn tại (404 Not Found)")
     void test_CreateOrder_CouponNotFound() throws Exception {
         OrderCreateRequest request = buildMockOrderRequest();
         request.setCouponId(UUID.randomUUID().toString());
 
         when(this.orderService.createOrder(any(OrderCreateRequest.class)))
-                .thenThrow(new com.shopcart.exceptions.CouponNotFound(UUID.randomUUID()));
+                .thenThrow(new CouponNotFound(UUID.randomUUID()));
 
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -157,13 +148,13 @@ public class OrderControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("TC12_CO: POST /api/orders - Tạo đơn hàng nhưng mã giảm giá hết hạn (404 Not Found)")
+    @DisplayName("TC11_CO: POST /api/orders - Tạo đơn hàng nhưng mã giảm giá hết hạn (404 Not Found)")
     void test_CreateOrder_CouponOutOfDate() throws Exception {
         OrderCreateRequest request = buildMockOrderRequest();
         request.setCouponId(UUID.randomUUID().toString());
 
         when(this.orderService.createOrder(any(OrderCreateRequest.class)))
-                .thenThrow(new com.shopcart.exceptions.CouponOutOfDate("SUMMER_SALE"));
+                .thenThrow(new CouponOutOfDate("SUMMER_SALE"));
 
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)

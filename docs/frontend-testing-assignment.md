@@ -1,4 +1,4 @@
-# 📌 Backend Testing Assignment
+# 📌 Frontend Testing Assignment
 
 ## Tổng quan
 
@@ -10,7 +10,7 @@
 - Nguyễn Đình Quốc Huy: checkInventoryAvailable()
 
 ### Integration test
-
+    
 #### CartComponent
 
 - Trần Thanh Quy:

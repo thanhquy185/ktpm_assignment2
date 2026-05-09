@@ -74,17 +74,17 @@ public class OrderServiceUnitTest {
                 when(this.orderRepository.findById(orderId))
                                 .thenReturn(Optional.of(order));
 
-                Order orderSelected = this.orderService.getOrderById(orderId);
-                assertNotNull(orderSelected);
-                assertEquals(order.getId(), orderSelected.getId());
-                assertEquals(order.getUser(), orderSelected.getUser());
-                assertEquals(order.getCoupon(), orderSelected.getCoupon());
-                assertEquals(order.getShippingAddress(), orderSelected.getShippingAddress());
-                assertEquals(order.getSubtotal(), orderSelected.getSubtotal());
-                assertEquals(order.getShippingFee(), orderSelected.getShippingFee());
-                assertEquals(order.getDiscount(), orderSelected.getDiscount());
-                assertEquals(order.getTotalPrice(), orderSelected.getTotalPrice());
-                assertEquals(order.getStatus(), orderSelected.getStatus());
+                Order result = this.orderService.getOrderById(orderId);
+                assertNotNull(result);
+                assertEquals(order.getId(), result.getId());
+                assertEquals(order.getUser(), result.getUser());
+                assertEquals(order.getCoupon(), result.getCoupon());
+                assertEquals(order.getShippingAddress(), result.getShippingAddress());
+                assertEquals(order.getSubtotal(), result.getSubtotal());
+                assertEquals(order.getShippingFee(), result.getShippingFee());
+                assertEquals(order.getDiscount(), result.getDiscount());
+                assertEquals(order.getTotalPrice(), result.getTotalPrice());
+                assertEquals(order.getStatus(), result.getStatus());
 
                 verify(this.orderRepository, times(1)).findById(orderId);
         }
@@ -452,7 +452,8 @@ public class OrderServiceUnitTest {
 
                 when(this.productService.getProductById(productId)).thenReturn(product);
                 when(this.userService.getUserById(userId)).thenReturn(this.fakeDataForTest.getUserFake1());
-                when(this.couponService.getCouponById(couponId)).thenThrow(new com.shopcart.exceptions.CouponNotFound(couponId));
+                when(this.couponService.getCouponById(couponId))
+                                .thenThrow(new com.shopcart.exceptions.CouponNotFound(couponId));
 
                 assertThrows(com.shopcart.exceptions.CouponNotFound.class, () -> {
                         this.orderService.createOrder(request);
@@ -479,7 +480,7 @@ public class OrderServiceUnitTest {
                 when(this.productService.getProductById(productId)).thenReturn(product);
                 when(this.userService.getUserById(userId)).thenReturn(this.fakeDataForTest.getUserFake1());
                 when(this.couponService.getCouponById(couponId)).thenReturn(coupon);
-                
+
                 doThrow(new com.shopcart.exceptions.CouponOutOfDate(coupon.getCode()))
                                 .when(this.couponService).checkOutOfDate(any(), any(), any(), any());
 

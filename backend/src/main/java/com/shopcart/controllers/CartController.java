@@ -11,6 +11,7 @@ import com.shopcart.exceptions.CartNotFound;
 import com.shopcart.exceptions.InsufficientStock;
 import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.exceptions.ProductNotFoundInInventory;
+import com.shopcart.exceptions.UserNotFound;
 import com.shopcart.exceptions.UserNotFoundInCart;
 import com.shopcart.services.CartService;
 import com.shopcart.utils.ValidationUtil;
@@ -145,6 +146,17 @@ public class CartController {
                 RestResponse<Object> restResponse = RestResponse.builder()
                                 .status(HttpStatus.NOT_FOUND.value())
                                 .error("CART_NOT_FOUND")
+                                .message(e.getMessage())
+                                .build();
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restResponse);
+        }
+
+        @ExceptionHandler(UserNotFound.class)
+        public ResponseEntity<?> handleUserNotFound(UserNotFound e) {
+                RestResponse<Object> restResponse = RestResponse.builder()
+                                .status(HttpStatus.NOT_FOUND.value())
+                                .error("USER_NOT_FOUND")
                                 .message(e.getMessage())
                                 .build();
 

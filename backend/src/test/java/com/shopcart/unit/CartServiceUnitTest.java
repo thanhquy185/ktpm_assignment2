@@ -55,7 +55,7 @@ public class CartServiceUnitTest {
         private final FakeDataForTest fakeDataForTest = new FakeDataForTest();
 
         @Test
-        @DisplayName("TC6_ATC: Thêm sản phẩm nhưng người dùng không tồn tại")
+        @DisplayName("TC7_ATC: Thêm sản phẩm nhưng người dùng không tồn tại")
         void test_AddToCart_ButUserNotFound() throws UserNotFound {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -85,7 +85,7 @@ public class CartServiceUnitTest {
         }
 
         @Test
-        @DisplayName("TC7_ATC: Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)")
+        @DisplayName("TC8_ATC: Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)")
         void test_AddToCart_WithProductExists() {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -142,7 +142,7 @@ public class CartServiceUnitTest {
         }
 
         @Test
-        @DisplayName("TC8_ATC: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ")
+        @DisplayName("TC9_ATC: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ")
         void test_AddToCart_WithProductExistsButInsufficientStock() throws InsufficientStock {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -176,7 +176,7 @@ public class CartServiceUnitTest {
         }
 
         @Test
-        @DisplayName("TC6_UQ: Cập nhật sản phẩm nhưng giỏ hàng của người dùng không tồn tại")
+        @DisplayName("TC7_UQ: Cập nhật sản phẩm nhưng giỏ hàng của người dùng không tồn tại")
         void test_UpdateQuantity_ButUserNotFound() throws UserNotFoundInCart {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -202,7 +202,7 @@ public class CartServiceUnitTest {
         }
 
         @Test
-        @DisplayName("TC7_UQ: Cập nhật sản phẩm nhưng sản phẩm không tồn tại trong giỏ")
+        @DisplayName("TC8_UQ: Cập nhật sản phẩm nhưng sản phẩm không tồn tại trong giỏ")
         void test_UpdateQuantity_ButProductNotExistsInCart() throws CartItemNotFound {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -380,26 +380,26 @@ public class CartServiceUnitTest {
         @Test
         @DisplayName("TC1_RFC: Xóa sản phẩm thành công")
         void test_RemoveFromCart_Successful() {
-                // Lấy dữ liệu giả từ FakeDataForTest 
+                // Lấy dữ liệu giả từ FakeDataForTest
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
                 Cart cart = this.fakeDataForTest.getCartFake1();
                 CartItem cartItem = this.fakeDataForTest.getCartItemFake1();
-                
+
                 CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
                                 .productId(productId.toString())
                                 .build();
 
-                //Giả lập các hàm get để tìm được dữ liệu
+                // Giả lập các hàm get để tìm được dữ liệu
                 when(this.productService.getProductById(UUID.fromString(request.getProductId())))
                                 .thenReturn(product);
                 when(this.cartRepository.findByUserId(userId))
                                 .thenReturn(Optional.of(cart));
                 when(this.cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()))
                                 .thenReturn(Optional.of(cartItem));
-                                
-                //Giả lập dữ liệu cho hàm updateCartTotal bên trong
+
+                // Giả lập dữ liệu cho hàm updateCartTotal bên trong
                 when(this.cartItemRepository.sumQuantity(cart.getId())).thenReturn(0L);
                 when(this.cartItemRepository.sumPrice(cart.getId())).thenReturn(0L);
                 when(this.cartRepository.findById(cart.getId())).thenReturn(Optional.of(cart));
@@ -425,7 +425,7 @@ public class CartServiceUnitTest {
         void test_RemoveFromCart_ProductNotFound() throws ProductNotFound {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
-                
+
                 CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
                                 .productId(productId.toString())
                                 .build();
@@ -450,7 +450,7 @@ public class CartServiceUnitTest {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
-                
+
                 CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
                                 .productId(productId.toString())
                                 .build();
@@ -479,7 +479,7 @@ public class CartServiceUnitTest {
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
                 Cart cart = this.fakeDataForTest.getCartFake1();
-                
+
                 CartItemRemoveFromCartRequest request = CartItemRemoveFromCartRequest.builder()
                                 .productId(productId.toString())
                                 .build();
@@ -489,9 +489,9 @@ public class CartServiceUnitTest {
                                 .thenReturn(product);
                 when(this.cartRepository.findByUserId(userId))
                                 .thenReturn(Optional.of(cart));
-                        // Giả lập trả về Optional rỗng (Không tìm thấy sản phẩm trong giỏ)
+                // Giả lập trả về Optional rỗng (Không tìm thấy sản phẩm trong giỏ)
                 when(this.cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()))
-                        .thenReturn(Optional.empty());
+                                .thenReturn(Optional.empty());
 
                 assertThrows(CartItemNotFound.class, () -> {
                         this.cartService.removeFromCart(userId, request);
