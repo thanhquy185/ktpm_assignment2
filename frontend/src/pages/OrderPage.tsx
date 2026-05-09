@@ -3,30 +3,21 @@ import { toast } from "react-toastify";
 import { HttpStatusCode } from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import OrderItemComponent from "../components/OrderItem";
-import { OrderService } from "../services/orderService";
+import { OrderApi } from "../services/api/orderApi";
 import type { OrderType } from "../types/order";
 
 const OrderPage: React.FC = () => {
-  const { user, fetchUser } = useAuth();
+  const { user } = useAuth();
 
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
 
-  const handleCancelOrder = async (orderId: string) => {
-    const confirmCancel = window.confirm(
-      "Bạn có chắc muốn huỷ đơn hàng này không?",
-    );
-
-    if (!confirmCancel) return;
-
-    const response = await OrderService.cancelOrder(orderId);
+  const fetchOrdersByUserId = async (userId: string) => {
+    const response = await OrderApi.getOrdersByUserId(userId);
     if (response.status === HttpStatusCode.Ok && response.data) {
-      await fetchUser();
-
-      toast.success("Huỷ đơn hàng thành công!");
+      setOrders(response.data);
     } else if ((response as any).error) {
-      setError("Huỷ đơn hàng thất bại!");
+      setOrders([]);
       toast.error((response as any).message);
     }
   };
@@ -34,11 +25,9 @@ const OrderPage: React.FC = () => {
   useEffect(() => {
     setLoading(true);
 
-    if (user?.orders) {
-      setOrders(user.orders);
+    if (user && user.id) {
+      fetchOrdersByUserId(user.id);
     }
-
-    console.log(user);
 
     setLoading(false);
   }, [user]);
@@ -60,11 +49,6 @@ const OrderPage: React.FC = () => {
           <div className="flex items-center justify-center min-h-[256px] rounded-lg bg-white shadow p-8">
             <span className="text-gray-600">Đang tải đơn hàng...</span>
           </div>
-        ) : error ? (
-          /* ERROR */
-          <div className="rounded-lg bg-red-50 text-red-700 border border-red-200 p-6">
-            {error}
-          </div>
         ) : orders.length === 0 ? (
           /* EMPTY */
           <div className="rounded-lg bg-white shadow p-10 text-center">
@@ -80,7 +64,11 @@ const OrderPage: React.FC = () => {
           /* LIST */
           <div className="space-y-6">
             {orders.map((order) => (
-              <OrderItemComponent order={order} onCancel={handleCancelOrder} />
+              <OrderItemComponent
+                userId={user?.id || ""}
+                order={order}
+                fetchOrdersByUserId={fetchOrdersByUserId}
+              />
             ))}
           </div>
         )}

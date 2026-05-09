@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { HttpStatusCode } from "axios";
-import { UserService } from "../services/userService";
+import { UserApi } from "../services/api/userApi";
 import type { UserRequest, UserType } from "../types/user";
 
 interface AuthContextType {
@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchUser = async () => {
-    const response = await UserService.getInfo();
+    const response = await UserApi.getInfo();
     if (response.status === HttpStatusCode.Ok && response.data) {
       setUser(response.data);
     } else if ((response as any).error) {
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   };
   const login = async (request: UserRequest) => {
-    const response = await UserService.handleLogin(request);
+    const response = await UserApi.handleLogin(request);
     if (response.status === HttpStatusCode.Ok && response.data) {
       await fetchUser();
     } else if ((response as any).error) {
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
   const logout = async () => {
-    const response = await UserService.handleLogout();
+    const response = await UserApi.handleLogout();
     if (response.status === HttpStatusCode.Ok) {
       setUser(undefined);
     }

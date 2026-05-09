@@ -8,7 +8,7 @@ export interface OrderItemType {
 }
 
 export interface OrderItemRequest {
-  productId?: string;
-  quantity?: number;
-  price?: number;
+  productId: string;
+  quantity: number;
+  price: number;
 }

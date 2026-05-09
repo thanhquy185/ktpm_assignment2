@@ -6,9 +6,23 @@ export interface CartItemType {
   quantity?: number;
 }
 
-export interface CartItemRequest {
-  productId?: string;
-  productPrice?: number;
+export interface CartItemAddToCartRequest {
+  productId: string;
+  quantity: number;
+}
+
+export interface CartItemUpdateQuantityRequest {
+  productId: string;
+  quantity: number;
+}
+
+export interface CartItemRemoveFromCartRequest {
+  productId: string;
+}
+
+export interface CartItemTestRequest {
+  productId: string;
+  productPrice: number;
   productStock?: number;
-  quantity?: number;
+  quantity: number;
 }

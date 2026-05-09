@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { HttpStatusCode } from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import { UserApi } from "../services/api/userApi";
 import type { UserRequest } from "../types/user";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { fetchUser } = useAuth();
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -25,26 +27,23 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    try {
-      setLoading(true);
-      setError("");
+    setLoading(true);
+    setError("");
 
-      login({
-        username,
-        password,
-      } as UserRequest);
-
+    const response = await UserApi.handleLogin({
+      username,
+      password,
+    } as UserRequest);
+    if (response.status === HttpStatusCode.Ok && response.data) {
+      await fetchUser();
       toast.success("Đăng nhập thành công!");
-
       navigate("/products");
-    } catch (err: any) {
-      console.error(err);
-
+    } else if ((response as any).error) {
       setError("Sai tên tài khoản hoặc mật khẩu!");
       toast.error("Đăng nhập thất bại!");
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   return (

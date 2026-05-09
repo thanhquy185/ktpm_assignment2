@@ -1,7 +1,7 @@
 export interface CouponType {
-  id?: string;
-  name?: string;
-  code?: string;
-  type?: string;
-  discount?: number;
+  id: string;
+  name: string;
+  code: string;
+  type: string;
+  discount: number;
 }
