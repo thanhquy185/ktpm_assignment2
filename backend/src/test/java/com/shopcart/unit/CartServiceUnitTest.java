@@ -6,14 +6,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -503,5 +508,221 @@ public class CartServiceUnitTest {
                                 .findByUserId(userId);
                 verify(this.cartItemRepository, times(1))
                                 .findByCartIdAndProductId(cart.getId(), product.getId());
+        }
+
+        @DisplayName("TC1_ATC: Thêm sản phẩm thành công")
+        @ParameterizedTest
+        @ValueSource(longs = { 1L, 2L, 3L, 4L, 5L })
+        // ProductFake1 có inventory là 5
+        void addToCart_WhenProductIsValid_ShouldAddProductSuccessfully(Long quantity) {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                Cart cart = Cart.builder()
+                                .id(fakeDataForTest.getCartIdFake1())
+                                .totalQuantity(0L)
+                                .totalPrice(0L)
+                                .cartItems(List.<CartItem>of())
+                                .user(fakeDataForTest.getUserFake1())
+                                .build();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(quantity)
+                                .build();
+                when(productService.getProductById(product.getId()))
+                                .thenReturn(product);
+                when(cartRepository.findByUserId(userId))
+                                .thenReturn(Optional.of(cart));
+                when(cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()))
+                                .thenReturn(Optional.empty());
+                when(cartItemRepository.save(any(CartItem.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+                when(cartItemRepository.sumQuantity(cart.getId()))
+                                .thenReturn(2L);
+                when(cartItemRepository.sumPrice(cart.getId()))
+                                .thenReturn(product.getPrice());
+                when(cartRepository.findById(cart.getId()))
+                                .thenReturn(Optional.of(cart));
+                when(cartRepository.save(any(Cart.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+
+                // Act
+                CartItem result = cartService.addToCart(userId, request);
+
+                // Assert
+                assertEquals(request.getQuantity(), result.getQuantity());
+                assertEquals(product.getPrice(), result.getPrice());
+                assertEquals(product, result.getProduct());
+                assertEquals(cart, result.getCart());
+
+                verify(productService)
+                                .getProductById(product.getId());
+                verify(cartRepository)
+                                .findByUserId(userId);
+                verify(cartItemRepository)
+                                .findByCartIdAndProductId(
+                                                cart.getId(),
+                                                product.getId());
+                verify(cartRepository)
+                                .save(any(Cart.class));
+        }
+
+        @Test
+        @DisplayName("TC2_ATC: Thêm sản phẩm nhưng sản phẩm không tồn tại")
+        void addToCart_WhenProductNotFound_ShouldThrowProductNotFoundException() {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                UUID productId = fakeDataForTest.getProductIdFake5();
+
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(productId.toString())
+                                .quantity(2L)
+                                .build();
+                when(productService.getProductById(productId))
+                                .thenThrow(new ProductNotFound(productId));
+                // Act + Assert
+                assertThrows(ProductNotFound.class,
+                                () -> cartService.addToCart(userId, request));
+
+                verify(productService).getProductById(productId);
+                verifyNoInteractions(cartRepository);
+                verifyNoInteractions(cartItemRepository);
+        }
+
+        @DisplayName("TC3_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn hoặc bằng 0")
+        @ParameterizedTest
+        @ValueSource(longs = { -3L, -2L, -1L, 0L })
+        void addToCart_WhenQuantityLessThanOrEqualsZero_ShouldThrowCartItemQuantityGreaterThanZeroException(
+                        Long quantity) {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(quantity)
+                                .build();
+                when(productService.getProductById(product.getId()))
+                                .thenReturn(product);
+
+                // Act + Assert
+                assertThrows(CartItemQuantityGreaterThanZero.class,
+                                () -> cartService.addToCart(userId, request));
+
+                verify(productService).getProductById(product.getId());
+                verifyNoInteractions(cartRepository);
+                verifyNoInteractions(cartItemRepository);
+        }
+
+        @Test
+        @DisplayName("TC4_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại")
+        void addToCart_WhenInventoryNotFound_ShouldThrowProductNotFoundInInventoryException() {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                product.setInventory(null);
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(2L)
+                                .build();
+                when(productService.getProductById(product.getId()))
+                                .thenReturn(product);
+
+                // Act + Assert
+                assertThrows(ProductNotFoundInInventory.class,
+                                () -> cartService.addToCart(userId, request));
+
+                verify(productService).getProductById(product.getId());
+                verifyNoInteractions(cartRepository);
+                verifyNoInteractions(cartItemRepository);
+        }
+
+        @DisplayName("TC5_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ")
+        @ParameterizedTest
+        @ValueSource(longs = { 6L, 7L, 10L, 100L })
+        // Tồn kho của productFake1 là 5
+        void addToCart_WhenInventoryIsInsufficient_ShouldThrowInsufficientStockException(Long quantity) {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(quantity)
+                                .build();
+                when(productService.getProductById(product.getId()))
+                                .thenReturn(product);
+
+                // Act + Assert
+                assertThrows(InsufficientStock.class,
+                                () -> cartService.addToCart(userId, request));
+
+                verify(productService).getProductById(product.getId());
+                verifyNoInteractions(cartRepository);
+                verifyNoInteractions(cartItemRepository);
+        }
+
+        @Test
+        @DisplayName("TC9_ATC: Thêm sản phẩm thành công vào giỏ hàng, cập nhật tổng trong giỏ hàng")
+        void addToCart_WhenCartHasItemsAndProductIsNotDuplicate_ShouldUpdateTotalQuantityAndPrice() {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Cart cart = fakeDataForTest.getCartFake1();
+                Product product = fakeDataForTest.getProductFake2();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(2L)
+                                .build();
+                CartItem cartItem = CartItem.builder()
+                                .id(UUID.randomUUID())
+                                .price(product.getPrice())
+                                .quantity(2L)
+                                .cart(cart)
+                                .product(product)
+                                .build();
+                when(productService.getProductById(product.getId()))
+                                .thenReturn(product);
+                when(cartRepository.findByUserId(userId))
+                                .thenReturn(Optional.of(cart));
+                when(cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()))
+                                .thenReturn(Optional.empty());
+                when(cartItemRepository.save(any(CartItem.class)))
+                                .thenReturn(cartItem);
+                Long oldTotalQuantity = cart.getTotalQuantity();
+                Long oldTotalPrice = cart.getTotalPrice();
+                // Thêm 2 product vào cart
+                when(cartItemRepository.sumQuantity(cart.getId()))
+                                .thenReturn(oldTotalQuantity + 2L);
+                when(cartItemRepository.sumPrice(cart.getId()))
+                                .thenReturn(oldTotalPrice + 2L * product.getPrice());
+                when(cartRepository.findById(cart.getId()))
+                                .thenReturn(Optional.of(cart));
+                when(cartRepository.save(any(Cart.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+                ArgumentCaptor<Cart> cartCaptor = ArgumentCaptor.forClass(Cart.class);
+
+                // Act
+                CartItem result = cartService.addToCart(userId, request);
+
+                // Assert
+                assertEquals(request.getQuantity(), result.getQuantity());
+                assertEquals(product.getPrice(), result.getPrice());
+                assertEquals(product, result.getProduct());
+                assertEquals(cart, result.getCart());
+
+                verify(productService)
+                                .getProductById(product.getId());
+                verify(cartRepository)
+                                .findByUserId(userId);
+                verify(cartItemRepository)
+                                .findByCartIdAndProductId(
+                                                cart.getId(),
+                                                product.getId());
+                verify(cartRepository)
+                                .save(any(Cart.class));
+                verify(cartRepository)
+                                .save(cartCaptor.capture());
+                Cart updatedCart = cartCaptor.getValue();
+
+                assertEquals(oldTotalQuantity + 2L, updatedCart.getTotalQuantity());
+                assertEquals(oldTotalPrice + 2L * product.getPrice(), updatedCart.getTotalPrice());
         }
 }

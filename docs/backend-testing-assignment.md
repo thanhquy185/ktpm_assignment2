@@ -92,13 +92,13 @@ Coverage ≥ 85% cho CartService
 
 - TC1_ATC: Thêm sản phẩm thành công
 - TC2_ATC: Thêm sản phẩm nhưng sản phẩm không tồn tại
-- TC3_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn 0
-- TC4_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bằng 0
-- TC5_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại
-- TC6_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ
-- TC7_ATC: Thêm sản phẩm nhưng người dùng không tồn tại
-- TC8_ATC: Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)
-- TC9_ATC: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ
+- TC3_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn hoặc bằng 0
+- TC4_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại
+- TC5_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ
+- TC6_ATC: Thêm sản phẩm nhưng người dùng không tồn tại
+- TC7_ATC: Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)
+- TC8_ATC: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ
+- TC9_ATC: Thêm sản phẩm thành công vào giỏ hàng, cập nhật tổng trong giỏ hàng
 
 ##### updateQuantity()
 
