@@ -16,6 +16,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -60,6 +69,19 @@ public class OrderControllerIntegrationTest {
         private OrderService orderService;
 
         private final FakeDataForTest fakeDataForTest = new FakeDataForTest();
+
+    @Test
+    @DisplayName("POST /api/orders - Tạo đơn hàng")
+    void test_CreateOrder() throws Exception {
+        
+    }
+
+    @Test
+    @DisplayName("DELETE /api/orders - Huỷ đơn hàng")
+    void test_CancelOrder() throws Exception {
+        
+    }
+
 
         // Hàm hỗ trợ tạo Request giả để tái sử dụng cho các TC
         private OrderCreateRequest buildMockOrderRequest() {
