@@ -1,9 +1,12 @@
 package com.shopcart.mock;
 
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,6 +17,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -28,13 +33,17 @@ import com.shopcart.configs.JwtAuthenticationFilter;
 import com.shopcart.controllers.CartController;
 import com.shopcart.dtos.request.CartItemUpdateQuantityRequest;
 import com.shopcart.entities.Cart;
+import com.shopcart.entities.Product;
 import com.shopcart.exceptions.CartItemNotFound;
 import com.shopcart.exceptions.CartItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.CartNotFound;
 import com.shopcart.exceptions.InsufficientStock;
 import com.shopcart.exceptions.ProductNotFound;
+import com.shopcart.exceptions.ProductNotFoundInInventory;
+import com.shopcart.exceptions.UserNotFound;
 import com.shopcart.exceptions.UserNotFoundInCart;
 import com.shopcart.services.CartService;
+import com.shopcart.dtos.request.CartItemAddToCartRequest;
 import com.shopcart.dtos.request.CartItemRemoveFromCartRequest;
 
 import static org.hamcrest.Matchers.notNullValue;
@@ -565,5 +574,288 @@ public class CartControllerMockTest {
                                 .andExpect(jsonPath("$.data.id", notNullValue()))
                                 .andExpect(jsonPath("$.data.user", notNullValue()))
                                 .andExpect(jsonPath("$.data.cartItems").isArray());
+        }
+
+        @Test
+        @DisplayName("TC1_ATC: Thêm sản phẩm thành công")
+        void addToCart_WhenValidRequest_ShouldReturnCreated() throws Exception {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                Cart cart = fakeDataForTest.getCartFake1();
+
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(2L)
+                                .build();
+
+                when(cartService.getCartByUserId(userId))
+                                .thenReturn(cart);
+
+                // Act + Assert
+                mockMvc.perform(post("/api/carts/user/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.status").value(201))
+                                .andExpect(jsonPath("$.message")
+                                                .value("Add product to cart is successful!"))
+                                .andExpect(jsonPath("$.error").doesNotExist())
+                                .andExpect(jsonPath("$.data.id")
+                                                .value(cart.getId().toString()));
+
+                verify(cartService)
+                                .addToCart(userId, request);
+
+                verify(cartService)
+                                .getCartByUserId(userId);
+        }
+
+        @Test
+        @DisplayName("TC2_ATC: Thêm sản phẩm nhưng sản phẩm không tồn tại")
+        void addToCart_WhenProductNotFound_ShouldReturnNotFound() throws Exception {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                UUID productId = UUID.randomUUID();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(productId.toString())
+                                .quantity(2L)
+                                .build();
+
+                doThrow(new ProductNotFound(productId))
+                                .when(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+
+                // Act + Assert
+                mockMvc.perform(post("/api/carts/user/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404))
+                                .andExpect(jsonPath("$.error")
+                                                .value("PRODUCT_NOT_FOUND"))
+                                .andExpect(jsonPath("$.message").exists())
+                                .andExpect(jsonPath("$.data").doesNotExist());
+
+                verify(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+
+                verify(cartService, never())
+                                .getCartByUserId(any(UUID.class));
+        }
+
+        @ParameterizedTest
+        @ValueSource(longs = { -2L, -3L, -1L })
+        @DisplayName("TC3_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn 0")
+        void addToCart_WhenQuantityLessThanZero_ShouldReturnBadRequest(Long quantity) throws Exception {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(quantity)
+                                .build();
+                doThrow(new CartItemQuantityGreaterThanZero())
+                                .when(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+
+                // Act + Assert
+                mockMvc.perform(post("/api/carts/user/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(jsonPath("$.error")
+                                                .value("CART_ITEM_QUANTITY_GREATER_THAN_ZERO"))
+                                .andExpect(jsonPath("$.message").exists());
+
+                verify(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+                verify(cartService, never())
+                                .getCartByUserId(any(UUID.class));
+        }
+
+        @Test
+        @DisplayName("TC4_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bằng 0")
+        void addToCart_WhenQuantityEqualsZero_ShouldReturnBadRequest() throws Exception {
+                // Arrange
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(0L)
+                                .build();
+                doThrow(new CartItemQuantityGreaterThanZero())
+                                .when(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+
+                mockMvc.perform(post("/api/carts/user/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(jsonPath("$.error")
+                                                .value("CART_ITEM_QUANTITY_GREATER_THAN_ZERO"))
+                                .andExpect(jsonPath("$.message").exists());
+
+                verify(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+                verify(cartService, never())
+                                .getCartByUserId(any(UUID.class));
+        }
+
+        @Test
+        @DisplayName("TC5_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại")
+        void addToCart_WhenInventoryNotFound_ShouldReturnNotFound() throws Exception {
+
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(2L)
+                                .build();
+                doThrow(new ProductNotFoundInInventory(product.getId()))
+                                .when(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+
+                mockMvc.perform(post("/api/carts/user/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404))
+                                .andExpect(jsonPath("$.error")
+                                                .value("PRODUCT_NOT_FOUND_IN_INVENTORY"))
+                                .andExpect(jsonPath("$.message").exists());
+
+                verify(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+                verify(cartService, never())
+                                .getCartByUserId(any(UUID.class));
+        }
+
+        @ParameterizedTest
+        @ValueSource(longs = { 6L, 7L, 10L })
+        @DisplayName("TC6_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ")
+        void addToCart_WhenInventoryInsufficient_ShouldReturnBadRequest(Long quantity) throws Exception {
+                UUID userId = fakeDataForTest.getUserIdFake1();
+                Product product = fakeDataForTest.getProductFake1();
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(quantity)
+                                .build();
+                doThrow(new InsufficientStock(product.getId()))
+                                .when(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+
+                mockMvc.perform(post("/api/carts/user/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(jsonPath("$.error")
+                                                .value("INSUFFICIENT_STOCK"))
+                                .andExpect(jsonPath("$.message").exists());
+
+                verify(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+                verify(cartService, never())
+                                .getCartByUserId(any(UUID.class));
+        }
+
+        @Test
+        @DisplayName("TC7_ATC: Thêm sản phẩm nhưng người dùng không tồn tại")
+        void addToCart_WhenUserNotFound_ShouldReturnNotFound() throws Exception {
+                UUID userId = fakeDataForTest.getUserIdFake1();
+
+                Product product = fakeDataForTest.getProductFake1();
+
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(2L)
+                                .build();
+
+                doThrow(new UserNotFound(userId))
+                                .when(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+
+                mockMvc.perform(post("/api/carts/user/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404))
+                                .andExpect(jsonPath("$.error")
+                                                .value("USER_NOT_FOUND"))
+                                .andExpect(jsonPath("$.message").exists());
+
+                verify(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+                verify(cartService, never())
+                                .getCartByUserId(any(UUID.class));
+        }
+
+        @Test
+        @DisplayName("TC8_ATC: Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)")
+        void addToCart_WhenProductAlreadyExists_ShouldUpdateQuantity() throws Exception {
+                UUID userId = fakeDataForTest.getUserIdFake1();
+
+                Product product = fakeDataForTest.getProductFake1();
+
+                Cart cart = fakeDataForTest.getCartFake1();
+
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(2L)
+                                .build();
+
+                when(cartService.getCartByUserId(userId))
+                                .thenReturn(cart);
+
+                mockMvc.perform(post("/api/carts/user/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.status").value(201))
+                                .andExpect(jsonPath("$.message")
+                                                .value("Add product to cart is successful!"))
+                                .andExpect(jsonPath("$.error").doesNotExist())
+                                .andExpect(jsonPath("$.data.id")
+                                                .value(cart.getId().toString()));
+
+                verify(cartService)
+                                .addToCart(userId, request);
+
+                verify(cartService)
+                                .getCartByUserId(userId);
+        }
+
+        @Test
+        @DisplayName("TC9_ATC: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ")
+        void addToCart_WhenProductAlreadyExistsButInventoryInsufficient_ShouldReturnBadRequest() throws Exception {
+                UUID userId = fakeDataForTest.getUserIdFake1();
+
+                Product product = fakeDataForTest.getProductFake1();
+
+                CartItemAddToCartRequest request = CartItemAddToCartRequest.builder()
+                                .productId(product.getId().toString())
+                                .quantity(10L)
+                                .build();
+
+                doThrow(new InsufficientStock(product.getId()))
+                                .when(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+
+                mockMvc.perform(post("/api/carts/user/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(jsonPath("$.error")
+                                                .value("INSUFFICIENT_STOCK"))
+                                .andExpect(jsonPath("$.message").exists());
+
+                verify(cartService)
+                                .addToCart(eq(userId), any(CartItemAddToCartRequest.class));
+                verify(cartService, never())
+                                .getCartByUserId(any(UUID.class));
         }
 }

@@ -5,9 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -23,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.shopcart.FakeDataForTest;
 import com.shopcart.dtos.request.OrderItemRequest;
+import com.shopcart.dtos.request.OrderCancelRequest;
 import com.shopcart.dtos.request.OrderCreateRequest;
 import com.shopcart.entities.Coupon;
 import com.shopcart.entities.Order;
@@ -30,9 +35,11 @@ import com.shopcart.entities.Product;
 import com.shopcart.entities.User;
 import com.shopcart.enums.OrderPaymentMethodEnum;
 import com.shopcart.enums.OrderShippingMethodEnum;
+import com.shopcart.enums.OrderStatusEnum;
 import com.shopcart.exceptions.CouponNotFound;
 import com.shopcart.exceptions.CouponOutOfDate;
 import com.shopcart.exceptions.InsufficientStock;
+import com.shopcart.exceptions.OrderAlreadyCancelled;
 import com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero;
 import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.OrderNotFound;
@@ -526,5 +533,81 @@ public class OrderServiceUnitTest {
                 assertThrows(CouponOutOfDate.class, () -> {
                         this.orderService.createOrder(request);
                 });
+        }
+
+        @Test
+        @DisplayName("TC1_CO: Huỷ đơn hàng thành công")
+        void cancelOrder_When_OrderExists_Should_CancelSuccessfully() {
+                // Arrange
+                Order order = fakeDataForTest.getOrderFake1();
+                order.setStatus(OrderStatusEnum.PENDING);
+                OrderCancelRequest request = OrderCancelRequest.builder()
+                                .orderId(order.getId().toString())
+                                .build();
+                when(orderRepository.findById(order.getId()))
+                                .thenReturn(Optional.of(order));
+                when(orderRepository.save(any(Order.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+
+                // Act
+                Order result = orderService.cancelOrder(request);
+
+                // Assert
+                assertEquals(OrderStatusEnum.CANCELLED, result.getStatus());
+
+                verify(orderRepository)
+                                .findById(order.getId());
+                order.getOrderItems().forEach(orderItem -> verify(inventoryService)
+                                .increaseStock(
+                                                orderItem.getProduct().getId(),
+                                                orderItem.getQuantity()));
+                verify(inventoryService, times(order.getOrderItems().size()))
+                                .increaseStock(any(UUID.class), anyLong());
+                verifyNoMoreInteractions(inventoryService);
+                verify(orderRepository)
+                                .save(order);
+        }
+
+        @Test
+        @DisplayName("TC2_CO: Huỷ đơn hàng nhưng đơn hàng của người dùng không tồn tại")
+        void cancelOrder_When_UserOrderDoesNotExist_Should_ThrowNotFoundException() {
+                // Arrange
+                UUID orderId = UUID.randomUUID();
+                OrderCancelRequest request = OrderCancelRequest.builder()
+                                .orderId(orderId.toString())
+                                .build();
+                when(orderRepository.findById(orderId))
+                                .thenReturn(Optional.empty());
+                // Act + Assert
+                assertThrows(
+                                OrderNotFound.class,
+                                () -> orderService.cancelOrder(request));
+                verify(orderRepository)
+                                .findById(orderId);
+                verify(orderRepository, never())
+                                .save(any(Order.class));
+                verifyNoInteractions(inventoryService);
+        }
+
+        @Test
+        @DisplayName("TC3_CO: Huỷ đơn hàng nhưng đơn hàng đã được huỷ từ trước")
+        void cancelOrder_When_OrderAlreadyCancelled_Should_ThrowBusinessException() {
+                // Arrange
+                Order order = fakeDataForTest.getOrderFake1();
+                order.setStatus(OrderStatusEnum.CANCELLED);
+                OrderCancelRequest request = OrderCancelRequest.builder()
+                                .orderId(order.getId().toString())
+                                .build();
+                when(orderRepository.findById(order.getId()))
+                                .thenReturn(Optional.of(order));
+                // Act + Assert
+                assertThrows(
+                                OrderAlreadyCancelled.class,
+                                () -> orderService.cancelOrder(request));
+                verify(orderRepository)
+                                .findById(order.getId());
+                verify(orderRepository, never())
+                                .save(any(Order.class));
+                verifyNoInteractions(inventoryService);
         }
 }
