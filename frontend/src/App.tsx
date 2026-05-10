@@ -11,6 +11,7 @@ import Layout from "./layouts/Layout";
 import LoginPage from "./pages/LoginPage";
 import ProductsPage from "./pages/ProductsPage";
 import CartPage from "./pages/CartPage";
+import CheckOutPage from "./pages/CheckoutPage";
 import OrderPage from "./pages/OrderPage";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -33,6 +34,7 @@ function App() {
               <Route path="/" element={<Navigate to="/products" replace />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckOutPage />} />
               <Route path="/orders" element={<OrderPage />} />
             </Route>
             {/* Catch all - redirect to products */}

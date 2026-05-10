@@ -122,10 +122,10 @@ Coverage ≥ 85% cho CartService
 
 | Thành viên           | Method           | Test case |
 | -------------------- | ---------------- | :-------: |
-| Trần Thanh Quy       | addToCart()      | TC7 → TC9 |
-| Trần Thanh Quy       | updateQuantity() | TC7 → TC8 |
-| Danh Thị Ngọc Châu   | updateQuantity() | TC1 → TC6 |
-| Đỗ Nhật Huy          | addToCart()      | TC1 → TC6 |
+| Trần Thanh Quy       | addToCart()      | TC7 → TC9 | ✅
+| Trần Thanh Quy       | updateQuantity() | TC7 → TC8 | ✅
+| Danh Thị Ngọc Châu   | updateQuantity() | TC1 → TC6 | ✅
+| Đỗ Nhật Huy          | addToCart()      | TC1 → TC6 | 
 | Nguyễn Đình Quốc Huy | removeFromCart() | TC1 → TC4 | ✅
 
 ### OrderService
@@ -168,30 +168,28 @@ Coverage ≥ 85% cho OrderService
 - TC4_CO: Tạo đơn hàng nhưng số lượng sản phẩm bằng 0
 - TC5_CO: Tạo đơn hàng nhưng giá bán sản phẩm bé hơn 0
 - TC6_CO: Tạo đơn hàng nhưng giá bán sản phẩm bằng 0
-- TC7_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại
-- TC8_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
-- TC9_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
-- TC10_CO: Tạo đơn hàng nhưng người dùng không tồn tại
-- TC11_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại
-- TC12_CO: Tạo đơn hàng nhưng mã giảm giá hết hạn
+- TC7_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
+- TC8_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
+- TC9_CO: Tạo đơn hàng nhưng người dùng không tồn tại
+- TC10_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại
+- TC11_CO: Tạo đơn hàng nhưng mã giảm giá hết hạn
 
 ##### cancelOrder()
 
 - TC1_CO: Huỷ đơn hàng thành công
 - TC2_CO: Huỷ đơn hàng nhưng đơn hàng của người dùng không tồn tại
 - TC3_CO: Huỷ đơn hàng nhưng đơn hàng đã được huỷ từ trước
-- TC4_CO: Huỷ đơn hàng nhưng số lượng sản phẩm bé hơn hoặc bằng (tăng tồn kho sản phẩm)
 
 #### Phân công
 
 | Thành viên           | Method                  | Test case  |
 | -------------------- | ----------------------- | :--------: |
-| Trần Thanh Quy       | getOrderById()          | TC1 → TC2  |
-| Trần Thanh Quy       | checkStockBeforeOrder() | TC1 → TC4  |
-| Trần Thanh Quy       | calculateOrderTotal()   |    TC1     |
-| Danh Thị Ngọc Châu   | createOrder()           | TC1 → TC6  |
-| Đỗ Nhật Huy          | cancelOrder()           | TC1 → TC4  |
-| Nguyễn Đình Quốc Huy | createOrder()           | TC7 → TC12 | ✅
+| Trần Thanh Quy       | getOrderById()          | TC1 → TC2  | ✅
+| Trần Thanh Quy       | checkStockBeforeOrder() | TC1 → TC4  | ✅
+| Trần Thanh Quy       | calculateOrderTotal()   |    TC1     | ✅
+| Danh Thị Ngọc Châu   | createOrder()           | TC1 → TC6  | ✅
+| Đỗ Nhật Huy          | cancelOrder()           | TC1 → TC3  |
+| Nguyễn Đình Quốc Huy | createOrder()           | TC7 → TC11 | ✅
 
 ---
 
@@ -245,9 +243,8 @@ Các endpoint còn lại được khuyến khích triển khai thêm để hoàn
 - Tạo đơn hàng nhưng sản phẩm không tồn tại
 - Tạo đơn hàng nhưng số lượng sản phẩm bé hơn 0
 - Tạo đơn hàng nhưng số lượng sản phẩm bằng 0
-- Tạo đơn hàng nhưng giá bán sản phẩm bé hơn h 0
+- Tạo đơn hàng nhưng giá bán sản phẩm bé hơn 0
 - Tạo đơn hàng nhưng giá bán sản phẩm bằng 0
-- Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại
 - Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
 - Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
 - Tạo đơn hàng nhưng người dùng không tồn tại
@@ -265,17 +262,18 @@ Các endpoint còn lại được khuyến khích triển khai thêm để hoàn
 
 - Kiểm tra tồn kho thành công
 - Kiểm tra tồn kho nhưng có 1 sản phẩm có số lượng cần so sánh bé hơn hoặc bằng 0
+- Kiểm tra tồn kho nhưng có 1 sản phẩm có số lượng cần so sánh bằng 0
 - Kiểm tra tồn kho nhưng có 1 sản phẩm không tồn tại trong tồn kho
 
 ## Phân công
 
 | Thành viên           | Controller | Method | Endpoint                 | Test case |
 | -------------------- | :--------: | :----: | ------------------------ | :-------: |
-| Trần Thanh Quy       |    Cart    |  POST  | /api/carts/user/{userId} |    All    |
-| Danh Thị Ngọc Châu   |   Order    |  POST  | /api/orders              |   1 → 6   |
+| Trần Thanh Quy       |    Cart    |  POST  | /api/carts/user/{userId} |    All    | ✅
+| Danh Thị Ngọc Châu   |   Order    |  POST  | /api/orders              |   1 → 6   | ✅
 | Đỗ Nhật Huy          |   Order    | DELETE | /api/orders              |    All    |
 | Đỗ Nhật Huy          | Inventory  |  POST  | /api/inventories         |    All    |
-| Nguyễn Đình Quốc Huy |   Order    |  POST  | /api/orders              |  7 → 12   |
+| Nguyễn Đình Quốc Huy |   Order    |  POST  | /api/orders              |  7 → 11   | ✅
 
 ---
 
@@ -348,11 +346,11 @@ Verify mock interactions và kiểm tra phản hồi trả về từ controller 
 
 | Thành viên           | Method | Endpoint                 | Test case |
 | -------------------- | :----: | ------------------------ | :-------: |
-| Trần Thanh Quy       |  GET   | /api/carts               |    All    |
-| Trần Thanh Quy       |  GET   | /api/carts/{id}          |    All    |
-| Trần Thanh Quy       |  GET   | /api/carts/user/{userId} |    All    |
-| Trần Thanh Quy       |  PUT   | /api/carts/user/{userId} |   7 → 8   |
-| Danh Thị Ngọc Châu   |  PUT   | /api/carts/user/{userId} |   1 → 6   |
+| Trần Thanh Quy       |  GET   | /api/carts               |    All    | ✅
+| Trần Thanh Quy       |  GET   | /api/carts/{id}          |    All    | ✅
+| Trần Thanh Quy       |  GET   | /api/carts/user/{userId} |    All    | ✅
+| Trần Thanh Quy       |  PUT   | /api/carts/user/{userId} |   7 → 8   | ✅
+| Danh Thị Ngọc Châu   |  PUT   | /api/carts/user/{userId} |   1 → 6   | ✅
 | Đỗ Nhật Huy          |  POST  | /api/carts/user/{userId} |    All    |
 | Nguyễn Đình Quốc Huy | DELETE | /api/carts/user/{userId} |    All    | ✅
 
@@ -396,8 +394,8 @@ Verify repository interactions và kiểm tra dữ liệu sau khi service xử l
 
 - Kiểm tra tồn kho sản phẩm thành công
 - Kiểm tra tồn kho sản phẩm nhưng sản phẩm không tồn tại
-- Kiểm tra tồn kho sản phẩm nhưng tồn kho không tồn tại
-- Kiểm tra tồn kho sản phẩm nhưng tồn kho không đủ
+- Kiểm tra tồn kho sản phẩm nhưng tồn kho của sản phẩm không tồn tại
+- Kiểm tra tồn kho sản phẩm nhưng tồn kho của sản phẩm không đủ
 
 ##### calculateOrderTotal()
 
@@ -411,7 +409,6 @@ Verify repository interactions và kiểm tra dữ liệu sau khi service xử l
 - Tạo đơn hàng nhưng số lượng sản phẩm bằng 0
 - Tạo đơn hàng nhưng giá bán sản phẩm bé hơn 0
 - Tạo đơn hàng nhưng giá bán sản phẩm bằng 0
-- Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại
 - Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại
 - Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ (giảm tồn kho sản phẩm)
 - Tạo đơn hàng nhưng người dùng không tồn tại
@@ -429,14 +426,14 @@ Verify repository interactions và kiểm tra dữ liệu sau khi service xử l
 
 | Thành viên           | Method                             | Test case |
 | -------------------- | ---------------------------------- | :-------: |
-| Trần Thanh Quy       | getOrders()                        |    All    |
-| Trần Thanh Quy       | getOrderById()                     |    All    |
-| Trần Thanh Quy       | checkStockBeforeOrder()            |    All    |
-| Trần Thanh Quy       | calculateOrderTotal()              |    All    |
-| Danh Thị Ngọc Châu   | createOrder()                      |   1 → 6   |
+| Trần Thanh Quy       | getOrders()                        |    All    | ✅
+| Trần Thanh Quy       | getOrderById()                     |    All    | ✅
+| Trần Thanh Quy       | checkStockBeforeOrder()            |    All    | ✅
+| Trần Thanh Quy       | calculateOrderTotal()              |    All    | ✅
+| Danh Thị Ngọc Châu   | createOrder()                      |   1 → 6   | ✅
 | Đỗ Nhật Huy          | getOrdersByUserId()                |    All    |
 | Đỗ Nhật Huy          | cancelOrder()                      |    All    |
-| Nguyễn Đình Quốc Huy | checkQuantityAndPriceBeforeOrder() |    All    |
-| Nguyễn Đình Quốc Huy | createOrder()                      |  7 → 12   |
+| Nguyễn Đình Quốc Huy | checkQuantityAndPriceBeforeOrder() |    All    | ✅
+| Nguyễn Đình Quốc Huy | createOrder()                      |  7 → 11   | ✅
 
 ---

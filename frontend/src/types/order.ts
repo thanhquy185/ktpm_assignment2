@@ -18,7 +18,7 @@ export interface OrderType {
 
 export interface OrderCreateRequest {
   userId: string;
-  couponId?: string;
+  couponId?: string | null;
   shippingAddress: string;
   shippingMethod: string;
   shippingFee: number;

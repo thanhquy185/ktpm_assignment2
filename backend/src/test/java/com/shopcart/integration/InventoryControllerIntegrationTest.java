@@ -27,6 +27,8 @@ import com.shopcart.configs.JwtAuthenticationFilter;
 import com.shopcart.controllers.InventoryController;
 import com.shopcart.dtos.request.InventoryCheckStockRequest;
 import com.shopcart.dtos.request.InventoryItemRequest;
+import com.shopcart.exceptions.InventoryItemQuantityGreaterThanZero;
+import com.shopcart.exceptions.ProductNotFoundInInventory;
 import com.shopcart.services.InventoryService;
 
 @WebMvcTest(InventoryController.class)
@@ -74,5 +76,130 @@ class InventoryControllerIntegrationTest {
 
                 verify(this.inventoryService, times(1))
                                 .checkStock(any(InventoryCheckStockRequest.class));
+        }
+
+        @Test
+        @DisplayName("POST /api/inventories - Kiểm tra tồn kho thành công")
+        void checkStock_WhenInventoryAvailable_ShouldReturnTrue() throws Exception {
+
+                InventoryCheckStockRequest request = InventoryCheckStockRequest.builder()
+                                .inventoryItems(List.of(
+                                                InventoryItemRequest.builder()
+                                                                .productId(fakeDataForTest.getProductIdFake1()
+                                                                                .toString())
+                                                                .quantity(2L)
+                                                                .build()))
+                                .build();
+
+                when(inventoryService.checkStock(any(InventoryCheckStockRequest.class)))
+                                .thenReturn(true);
+
+                mockMvc.perform(post("/api/inventories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+
+                                .andExpect(jsonPath("$.status")
+                                                .value(HttpStatus.OK.value()))
+
+                                .andExpect(jsonPath("$.message")
+                                                .value("Check stock for inventory items is available!"))
+
+                                .andExpect(jsonPath("$.data")
+                                                .value(true));
+        }
+
+        @Test
+        @DisplayName("POST /api/inventories - Kiểm tra tồn kho nhưng có 1 sản phẩm có số lượng cần so sánh bé hơn 0")
+        void checkStock_WhenQuantityLessThanZero_ShouldReturnBadRequest() throws Exception {
+
+                InventoryCheckStockRequest request = InventoryCheckStockRequest.builder()
+                                .inventoryItems(List.of(
+                                                InventoryItemRequest.builder()
+                                                                .productId(fakeDataForTest.getProductIdFake1()
+                                                                                .toString())
+                                                                .quantity(-1L)
+                                                                .build()))
+                                .build();
+
+                when(inventoryService.checkStock(any(InventoryCheckStockRequest.class)))
+                                .thenThrow(new InventoryItemQuantityGreaterThanZero());
+
+                mockMvc.perform(post("/api/inventories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest())
+
+                                .andExpect(jsonPath("$.status")
+                                                .value(HttpStatus.BAD_REQUEST.value()))
+
+                                .andExpect(jsonPath("$.error")
+                                                .value("INVENTORY_ITEM_QUANTITY_GREATER_THAN_ZERO"))
+
+                                .andExpect(jsonPath("$.message")
+                                                .exists());
+        }
+
+        @Test
+        @DisplayName("POST /api/inventories - Kiểm tra tồn kho nhưng có 1 sản phẩm có số lượng cần so sánh bằng 0")
+        void checkStock_WhenQuantityEqualZero_ShouldReturnBadRequest() throws Exception {
+
+                InventoryCheckStockRequest request = InventoryCheckStockRequest.builder()
+                                .inventoryItems(List.of(
+                                                InventoryItemRequest.builder()
+                                                                .productId(fakeDataForTest.getProductIdFake1()
+                                                                                .toString())
+                                                                .quantity(0L)
+                                                                .build()))
+                                .build();
+
+                when(inventoryService.checkStock(any(InventoryCheckStockRequest.class)))
+                                .thenThrow(new InventoryItemQuantityGreaterThanZero());
+
+                mockMvc.perform(post("/api/inventories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest())
+
+                                .andExpect(jsonPath("$.status")
+                                                .value(HttpStatus.BAD_REQUEST.value()))
+
+                                .andExpect(jsonPath("$.error")
+                                                .value("INVENTORY_ITEM_QUANTITY_GREATER_THAN_ZERO"))
+
+                                .andExpect(jsonPath("$.message")
+                                                .exists());
+        }
+
+        @Test
+        @DisplayName("POST /api/inventories - Kiểm tra tồn kho nhưng có 1 sản phẩm không tồn tại trong tồn kho")
+        void checkStock_WhenProductNotFoundInInventory_ShouldReturnNotFound() throws Exception {
+
+                UUID productId = fakeDataForTest.getProductIdFake1();
+
+                InventoryCheckStockRequest request = InventoryCheckStockRequest.builder()
+                                .inventoryItems(List.of(
+                                                InventoryItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(2L)
+                                                                .build()))
+                                .build();
+
+                when(inventoryService.checkStock(any(InventoryCheckStockRequest.class)))
+                                .thenThrow(new ProductNotFoundInInventory(productId));
+
+                mockMvc.perform(post("/api/inventories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound())
+
+                                .andExpect(jsonPath("$.status")
+                                                .value(HttpStatus.NOT_FOUND.value()))
+
+                                .andExpect(jsonPath("$.error")
+                                                .value("PRODUCT_NOT_FOUND_IN_INVENTORY"))
+
+                                .andExpect(jsonPath("$.message")
+                                                .exists());
         }
 }

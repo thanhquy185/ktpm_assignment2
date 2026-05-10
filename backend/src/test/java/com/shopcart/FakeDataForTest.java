@@ -66,6 +66,9 @@ public class FakeDataForTest {
         private CartItem cartItemFake1;
         // Carts
         private List<Cart> cartsFake;
+        // Coupon id
+        private UUID couponIdFake1;
+        private UUID couponIdFake2;
         // Coupon
         private Coupon couponFake1;
         private Coupon couponFake2;
@@ -96,6 +99,7 @@ public class FakeDataForTest {
                 this.fakeCartItemIdData();
                 this.fakeCartItemData();
                 this.fakeCartsData();
+                this.fakeCouponIdData();
                 this.fakeCouponData();
                 this.fakeOrderIdData();
                 this.fakeOrderData();
@@ -302,22 +306,30 @@ public class FakeDataForTest {
                                 .product(this.productFake1)
                                 .build();
                 this.cartFake1.setCartItems(List.<CartItem>of(this.cartItemFake1));
+                this.cartFake1.setTotalPrice(cartItemFake1.getQuantity() * cartItemFake1.getPrice());
+                this.cartFake1.setTotalQuantity(cartItemFake1.getQuantity());
         }
 
         private void fakeCartsData() {
                 this.cartsFake = List.<Cart>of(this.cartFake1, this.cartFake2);
         }
 
+        private void fakeCouponIdData() {
+                this.couponIdFake1 = UUID.randomUUID();
+
+                this.couponIdFake2 = UUID.randomUUID();
+        }
+
         private void fakeCouponData() {
                 this.couponFake1 = Coupon.builder()
-                                .id(UUID.randomUUID())
+                                .id(this.couponIdFake1)
                                 .code("SALE10%")
                                 .type(CouponTypeEnum.PERCENT)
                                 .discount(10L)
                                 .build();
 
                 this.couponFake2 = Coupon.builder()
-                                .id(UUID.randomUUID())
+                                .id(this.couponIdFake2)
                                 .code("SALE10K")
                                 .type(CouponTypeEnum.FIXED)
                                 .discount(10000L)

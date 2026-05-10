@@ -19,17 +19,21 @@ describe("Inventory Validation Unit Tests", () => {
       inventoryItems: [],
     };
     const result = InventoryValidation.checkInventoryAvailability(data);
-    expect(result.available).toBe(false);
     expect(result.error).toBe("INVENTORY_ITEMS_ARE_EMPTY");
+    expect(result.available).toBe(false);
   });
 
   test("TC3: Test quantity của 1 sản phẩm là null", () => {
     const data = {
-      inventoryItems: [{ productId: "PROD-1", quantity: null as any, productStock: 5 }],
+      inventoryItems: [
+        { productId: "PROD-1", quantity: null as any, productStock: 5 },
+      ],
     };
     const result = InventoryValidation.checkInventoryAvailability(data);
+    expect(result.error).toBe(
+      "INVENTORY_ITEM_QUANTITY_MUST_NOT_BE_NULL_OR_UNDEFINED",
+    );
     expect(result.available).toBe(false);
-    expect(result.error).toBe("INVENTORY_ITEM_IS_INVALID_OR_OUT_OF_STOCK");
   });
 
   test("TC4: Test quantity của 1 sản phẩm bé hơn 0", () => {
@@ -37,6 +41,9 @@ describe("Inventory Validation Unit Tests", () => {
       inventoryItems: [{ productId: "PROD-1", quantity: -2, productStock: 5 }],
     };
     const result = InventoryValidation.checkInventoryAvailability(data);
+    expect(result.error).toBe(
+      "INVENTORY_ITEM_QUANTITY_MUST_BE_GREATER_THAN_ZERO",
+    );
     expect(result.available).toBe(false);
   });
 
@@ -46,21 +53,41 @@ describe("Inventory Validation Unit Tests", () => {
     };
     const result = InventoryValidation.checkInventoryAvailability(data);
     expect(result.available).toBe(false);
+    expect(result.error).toBe(
+      "INVENTORY_ITEM_QUANTITY_MUST_BE_GREATER_THAN_ZERO",
+    );
   });
 
   test("TC6: Test stock của 1 sản phẩm là null", () => {
     const data = {
-      inventoryItems: [{ productId: "PROD-1", quantity: 2, productStock: null as any }],
+      inventoryItems: [
+        { productId: "PROD-1", quantity: 2, productStock: null as any },
+      ],
     };
     const result = InventoryValidation.checkInventoryAvailability(data);
+    expect(result.error).toBe(
+      "INVENTORY_ITEM_PRODUCT_STOCK_MUST_NOT_BE_NULL_OR_UNDEFINED",
+    );
     expect(result.available).toBe(false);
   });
 
-  test("TC7: Test quantity lớn hơn stock trên cùng 1 sản phẩm", () => {
+  test("TC7: Test stock của 1 sản phẩm bé hơn 0", () => {
+    const data = {
+      inventoryItems: [{ productId: "PROD-1", quantity: 5, productStock: -2 }],
+    };
+    const result = InventoryValidation.checkInventoryAvailability(data);
+    expect(result.error).toBe(
+      "INVENTORY_ITEM_PRODUCT_STOCK_MUST_BE_GREATER_THAN_OR_EQUAL_ZERO",
+    );
+    expect(result.available).toBe(false);
+  });
+
+  test("TC8: Test quantity lớn hơn stock trên cùng 1 sản phẩm", () => {
     const data = {
       inventoryItems: [{ productId: "PROD-1", quantity: 6, productStock: 5 }],
     };
     const result = InventoryValidation.checkInventoryAvailability(data);
     expect(result.available).toBe(false);
+    expect(result.error).toBe("INVENTORY_ITEM_INSUFFICIENT_STOCK");
   });
 });

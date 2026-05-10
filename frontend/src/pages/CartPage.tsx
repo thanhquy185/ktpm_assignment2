@@ -6,6 +6,7 @@ import CartComponent from "../components/Cart";
 import CheckoutComponent from "../components/Checkout";
 import { CartApi } from "../services/api/cartApi";
 import type { CartType } from "../types/cart";
+import CartSummaryComponent from "../components/CartSummary";
 
 const CartPage: React.FC = () => {
   const { user } = useAuth();
@@ -24,13 +25,17 @@ const CartPage: React.FC = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
+    const loadCart = async () => {
+      setLoading(true);
 
-    if (user && user.id) {
-      fetchCartByUserId(user.id);
-    }
+      if (user?.id) {
+        await fetchCartByUserId(user.id);
+      }
 
-    setLoading(false);
+      setLoading(false);
+    };
+
+    loadCart();
   }, [user]);
 
   if (loading) {
@@ -50,13 +55,8 @@ const CartPage: React.FC = () => {
           cartItems={cart?.cartItems || []}
           fetchCartByUserId={fetchCartByUserId}
         />
-        {/* Checkout Component */}
-        <CheckoutComponent
-          userId={user?.id || ""}
-          subtotal={cart?.totalPrice || 0}
-          cartItems={cart?.cartItems || []}
-          fetchCartByUserId={fetchCartByUserId}
-        />
+        {/* Cart Summary Component*/}
+        {cart && <CartSummaryComponent cart={cart} />}
       </div>
     </div>
   );

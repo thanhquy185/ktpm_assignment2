@@ -5,9 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -23,18 +27,25 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.shopcart.FakeDataForTest;
 import com.shopcart.dtos.request.OrderItemRequest;
+import com.shopcart.dtos.request.OrderCancelRequest;
 import com.shopcart.dtos.request.OrderCreateRequest;
 import com.shopcart.entities.Coupon;
 import com.shopcart.entities.Order;
 import com.shopcart.entities.Product;
+import com.shopcart.entities.User;
 import com.shopcart.enums.OrderPaymentMethodEnum;
 import com.shopcart.enums.OrderShippingMethodEnum;
+import com.shopcart.enums.OrderStatusEnum;
+import com.shopcart.exceptions.CouponNotFound;
+import com.shopcart.exceptions.CouponOutOfDate;
 import com.shopcart.exceptions.InsufficientStock;
+import com.shopcart.exceptions.OrderAlreadyCancelled;
 import com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero;
 import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.OrderNotFound;
 import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.exceptions.ProductNotFoundInInventory;
+import com.shopcart.exceptions.UserNotFound;
 import com.shopcart.repositories.OrderRepository;
 import com.shopcart.services.CartService;
 import com.shopcart.services.CouponService;
@@ -74,17 +85,17 @@ public class OrderServiceUnitTest {
                 when(this.orderRepository.findById(orderId))
                                 .thenReturn(Optional.of(order));
 
-                Order orderSelected = this.orderService.getOrderById(orderId);
-                assertNotNull(orderSelected);
-                assertEquals(order.getId(), orderSelected.getId());
-                assertEquals(order.getUser(), orderSelected.getUser());
-                assertEquals(order.getCoupon(), orderSelected.getCoupon());
-                assertEquals(order.getShippingAddress(), orderSelected.getShippingAddress());
-                assertEquals(order.getSubtotal(), orderSelected.getSubtotal());
-                assertEquals(order.getShippingFee(), orderSelected.getShippingFee());
-                assertEquals(order.getDiscount(), orderSelected.getDiscount());
-                assertEquals(order.getTotalPrice(), orderSelected.getTotalPrice());
-                assertEquals(order.getStatus(), orderSelected.getStatus());
+                Order result = this.orderService.getOrderById(orderId);
+                assertNotNull(result);
+                assertEquals(order.getId(), result.getId());
+                assertEquals(order.getUser(), result.getUser());
+                assertEquals(order.getCoupon(), result.getCoupon());
+                assertEquals(order.getShippingAddress(), result.getShippingAddress());
+                assertEquals(order.getSubtotal(), result.getSubtotal());
+                assertEquals(order.getShippingFee(), result.getShippingFee());
+                assertEquals(order.getDiscount(), result.getDiscount());
+                assertEquals(order.getTotalPrice(), result.getTotalPrice());
+                assertEquals(order.getStatus(), result.getStatus());
 
                 verify(this.orderRepository, times(1)).findById(orderId);
         }
@@ -214,12 +225,15 @@ public class OrderServiceUnitTest {
         @DisplayName("TC1_CO: Tạo đơn thành công")
         void test_CreateOrder_Successful() {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
+                User user = this.fakeDataForTest.getUserFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
+                UUID couponId = this.fakeDataForTest.getCouponIdFake1();
+                Coupon coupon = this.fakeDataForTest.getCouponFake1();
 
                 OrderCreateRequest request = OrderCreateRequest.builder()
                                 .userId(userId.toString())
-                                .couponId(null)
+                                .couponId(couponId.toString())
                                 .shippingAddress("Trường Đại học Sài Gọn")
                                 .shippingMethod(OrderShippingMethodEnum.STANDARD)
                                 .shippingFee(10000L)
@@ -234,18 +248,23 @@ public class OrderServiceUnitTest {
 
                 Order expectedOrder = Order.builder()
                                 .id(UUID.randomUUID())
-                                .user(this.fakeDataForTest.getUserFake1())
+                                .user(user)
+                                .coupon(coupon)
                                 .shippingAddress("Trường Đại học Sài Gọn")
                                 .subtotal(60000000L)
                                 .shippingFee(10000L)
-                                .discount(0D)
-                                .totalPrice(60010000D)
+                                .discount(6000000D)
+                                .totalPrice(54010000D)
                                 .build();
 
                 when(this.productService.getProductById(productId))
                                 .thenReturn(product);
                 when(this.userService.getUserById(userId))
-                                .thenReturn(this.fakeDataForTest.getUserFake1());
+                                .thenReturn(user);
+                when(this.couponService.getCouponById(couponId))
+                                .thenReturn(coupon);
+                when(this.couponService.calculateDiscount(coupon.getType().getValue(), coupon.getDiscount(), 60000000L))
+                                .thenReturn(6000000D);
                 when(this.orderRepository.save(any(Order.class)))
                                 .thenReturn(expectedOrder);
 
@@ -258,9 +277,12 @@ public class OrderServiceUnitTest {
                 assertEquals(expectedOrder.getShippingFee(), createdOrder.getShippingFee());
 
                 verify(this.productService, times(2)).getProductById(productId);
-                verify(this.userService, times(1)).getUserById(userId);
                 verify(this.inventoryService, times(1)).decreaseStock(productId, 2L);
+                verify(this.userService, times(1)).getUserById(userId);
                 verify(this.cartService, times(1)).clearCart(userId);
+                verify(this.couponService, times(1)).getCouponById(couponId);
+                verify(this.couponService, times(1)).calculateDiscount(coupon.getType().getValue(),
+                                coupon.getDiscount(), 60000000L);
                 verify(this.orderRepository, times(1)).save(any(Order.class));
         }
 
@@ -296,18 +318,36 @@ public class OrderServiceUnitTest {
         }
 
         @Test
-        @DisplayName("TC3_CO: Số lượng ≤ 0")
-        void test_CreateOrder_ButQuantityLessThanOrEqualZero() throws OrderItemQuantityGreaterThanZero {
+        @DisplayName("TC3_CO: Tạo đơn hàng nhưng số lượng sản phẩm bé hơn 0")
+        void test_CreateOrder_ButQuantityLessThanZero() throws OrderItemQuantityGreaterThanZero {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
 
                 OrderCreateRequest request = OrderCreateRequest.builder()
                                 .userId(userId.toString())
-                                .couponId(null)
-                                .shippingAddress("Trường Đại học Sài Gọn")
-                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
-                                .shippingFee(10000L)
-                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(-1L)
+                                                                .price(30000000L)
+                                                                .build()))
+                                .build();
+
+                assertThrows(OrderItemQuantityGreaterThanZero.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                verify(this.orderRepository, times(0)).save(any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC4_CO: Tạo đơn hàng nhưng số lượng sản phẩm bằng 0")
+        void test_CreateOrder_ButQuantityIsZero() throws OrderItemQuantityGreaterThanZero {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
                                 .orderItems(List.of(
                                                 OrderItemRequest.builder()
                                                                 .productId(productId.toString())
@@ -319,36 +359,63 @@ public class OrderServiceUnitTest {
                 assertThrows(OrderItemQuantityGreaterThanZero.class, () -> {
                         this.orderService.createOrder(request);
                 });
+
+                verify(this.orderRepository, times(0)).save(any(Order.class));
         }
 
         @Test
-        @DisplayName("TC4_CO: Giá ≤ 0")
-        void test_CreateOrder_ButPriceLessThanZero() throws OrderItemPriceGreaterThanOrEqualZero {
+        @DisplayName("TC5_CO: Tạo đơn hàng nhưng giá bán sản phẩm bé hơn 0")
+        void test_CreateOrder_ButPriceLessThanZero() {
+                // GIVEN
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
 
                 OrderCreateRequest request = OrderCreateRequest.builder()
                                 .userId(userId.toString())
-                                .couponId(null)
-                                .shippingAddress("Trường Đại học Sài Gọn")
-                                .shippingMethod(OrderShippingMethodEnum.STANDARD)
-                                .shippingFee(10000L)
-                                .paymentMethod(OrderPaymentMethodEnum.COD)
+                                .shippingFee(0L)
                                 .orderItems(List.of(
                                                 OrderItemRequest.builder()
                                                                 .productId(productId.toString())
-                                                                .quantity(2L)
-                                                                .price(-1000L)
+                                                                .quantity(1L)
+                                                                .price(-1L)
+                                                                .build()))
+                                .build();
+
+                // WHEN & THEN
+                assertThrows(OrderItemPriceGreaterThanOrEqualZero.class, () -> {
+                        this.orderService.createOrder(request);
+                });
+
+                // Verify: Đảm bảo không có lệnh lưu dữ liệu nào được thực hiện
+                verify(this.orderRepository, times(0)).save(any(Order.class));
+        }
+
+        @Test
+        @DisplayName("TC6_CO: Tạo đơn hàng nhưng giá bán sản phẩm bằng 0")
+        void test_CreateOrder_ButPriceIsZero() {
+                UUID userId = this.fakeDataForTest.getUserIdFake1();
+                UUID productId = this.fakeDataForTest.getProductIdFake1();
+
+                OrderCreateRequest request = OrderCreateRequest.builder()
+                                .userId(userId.toString())
+                                .shippingFee(0L)
+                                .orderItems(List.of(
+                                                OrderItemRequest.builder()
+                                                                .productId(productId.toString())
+                                                                .quantity(1L)
+                                                                .price(0L)
                                                                 .build()))
                                 .build();
 
                 assertThrows(OrderItemPriceGreaterThanOrEqualZero.class, () -> {
                         this.orderService.createOrder(request);
                 });
+
+                verify(this.orderRepository, times(0)).save(any(Order.class));
         }
 
         @Test
-        @DisplayName("TC7_CO: Tạo đơn hàng nhưng tồn kho của tồn kho không tồn tại")
+        @DisplayName("TC7_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại")
         void test_CreateOrder_ButProductNotFoundInInventory() throws ProductNotFoundInInventory {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -371,28 +438,7 @@ public class OrderServiceUnitTest {
         }
 
         @Test
-        @DisplayName("TC8_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không tồn tại")
-        void test_CreateOrder_ButProductNotFoundInStockCheck() throws ProductNotFound {
-                UUID userId = this.fakeDataForTest.getUserIdFake1();
-                UUID productId = this.fakeDataForTest.getProductIdFake1();
-
-                OrderCreateRequest request = OrderCreateRequest.builder()
-                                .userId(userId.toString())
-                                .orderItems(List.of(OrderItemRequest.builder()
-                                                .productId(productId.toString())
-                                                .quantity(2L)
-                                                .price(30000000L).build()))
-                                .build();
-
-                when(this.productService.getProductById(productId)).thenThrow(new ProductNotFound(productId));
-
-                assertThrows(ProductNotFound.class, () -> {
-                        this.orderService.createOrder(request);
-                });
-        }
-
-        @Test
-        @DisplayName("TC9_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ")
+        @DisplayName("TC8_CO: Tạo đơn hàng nhưng tồn kho của sản phẩm không đủ")
         void test_CreateOrder_ButInsufficientStock() throws InsufficientStock {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -413,8 +459,8 @@ public class OrderServiceUnitTest {
         }
 
         @Test
-        @DisplayName("TC10_CO: Tạo đơn hàng nhưng người dùng không tồn tại")
-        void test_CreateOrder_ButUserNotFound() throws com.shopcart.exceptions.UserNotFound {
+        @DisplayName("TC9_CO: Tạo đơn hàng nhưng người dùng không tồn tại")
+        void test_CreateOrder_ButUserNotFound() throws UserNotFound {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
@@ -427,16 +473,16 @@ public class OrderServiceUnitTest {
                                 .build();
 
                 when(this.productService.getProductById(productId)).thenReturn(product);
-                when(this.userService.getUserById(userId)).thenThrow(new com.shopcart.exceptions.UserNotFound(userId));
+                when(this.userService.getUserById(userId)).thenThrow(new UserNotFound(userId));
 
-                assertThrows(com.shopcart.exceptions.UserNotFound.class, () -> {
+                assertThrows(UserNotFound.class, () -> {
                         this.orderService.createOrder(request);
                 });
         }
 
         @Test
-        @DisplayName("TC11_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại")
-        void test_CreateOrder_ButCouponNotFound() throws com.shopcart.exceptions.CouponNotFound {
+        @DisplayName("TC10_CO: Tạo đơn hàng nhưng mã giảm giá không tồn tại")
+        void test_CreateOrder_ButCouponNotFound() throws CouponNotFound {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
                 Product product = this.fakeDataForTest.getProductFake1();
@@ -452,15 +498,16 @@ public class OrderServiceUnitTest {
 
                 when(this.productService.getProductById(productId)).thenReturn(product);
                 when(this.userService.getUserById(userId)).thenReturn(this.fakeDataForTest.getUserFake1());
-                when(this.couponService.getCouponById(couponId)).thenThrow(new com.shopcart.exceptions.CouponNotFound(couponId));
+                when(this.couponService.getCouponById(couponId))
+                                .thenThrow(new CouponNotFound(couponId));
 
-                assertThrows(com.shopcart.exceptions.CouponNotFound.class, () -> {
+                assertThrows(CouponNotFound.class, () -> {
                         this.orderService.createOrder(request);
                 });
         }
 
         @Test
-        @DisplayName("TC12_CO: Tạo đơn hàng nhưng mã giảm giá hết hạn")
+        @DisplayName("TC11_CO: Tạo đơn hàng nhưng mã giảm giá hết hạn")
         void test_CreateOrder_ButCouponOutOfDate() {
                 UUID userId = this.fakeDataForTest.getUserIdFake1();
                 UUID productId = this.fakeDataForTest.getProductIdFake1();
@@ -479,12 +526,88 @@ public class OrderServiceUnitTest {
                 when(this.productService.getProductById(productId)).thenReturn(product);
                 when(this.userService.getUserById(userId)).thenReturn(this.fakeDataForTest.getUserFake1());
                 when(this.couponService.getCouponById(couponId)).thenReturn(coupon);
-                
-                doThrow(new com.shopcart.exceptions.CouponOutOfDate(coupon.getCode()))
+
+                doThrow(new CouponOutOfDate(coupon.getCode()))
                                 .when(this.couponService).checkOutOfDate(any(), any(), any(), any());
 
-                assertThrows(com.shopcart.exceptions.CouponOutOfDate.class, () -> {
+                assertThrows(CouponOutOfDate.class, () -> {
                         this.orderService.createOrder(request);
                 });
+        }
+
+        @Test
+        @DisplayName("TC1_CO: Huỷ đơn hàng thành công")
+        void cancelOrder_When_OrderExists_Should_CancelSuccessfully() {
+                // Arrange
+                Order order = fakeDataForTest.getOrderFake1();
+                order.setStatus(OrderStatusEnum.PENDING);
+                OrderCancelRequest request = OrderCancelRequest.builder()
+                                .orderId(order.getId().toString())
+                                .build();
+                when(orderRepository.findById(order.getId()))
+                                .thenReturn(Optional.of(order));
+                when(orderRepository.save(any(Order.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+
+                // Act
+                Order result = orderService.cancelOrder(request);
+
+                // Assert
+                assertEquals(OrderStatusEnum.CANCELLED, result.getStatus());
+
+                verify(orderRepository)
+                                .findById(order.getId());
+                order.getOrderItems().forEach(orderItem -> verify(inventoryService)
+                                .increaseStock(
+                                                orderItem.getProduct().getId(),
+                                                orderItem.getQuantity()));
+                verify(inventoryService, times(order.getOrderItems().size()))
+                                .increaseStock(any(UUID.class), anyLong());
+                verifyNoMoreInteractions(inventoryService);
+                verify(orderRepository)
+                                .save(order);
+        }
+
+        @Test
+        @DisplayName("TC2_CO: Huỷ đơn hàng nhưng đơn hàng của người dùng không tồn tại")
+        void cancelOrder_When_UserOrderDoesNotExist_Should_ThrowNotFoundException() {
+                // Arrange
+                UUID orderId = UUID.randomUUID();
+                OrderCancelRequest request = OrderCancelRequest.builder()
+                                .orderId(orderId.toString())
+                                .build();
+                when(orderRepository.findById(orderId))
+                                .thenReturn(Optional.empty());
+                // Act + Assert
+                assertThrows(
+                                OrderNotFound.class,
+                                () -> orderService.cancelOrder(request));
+                verify(orderRepository)
+                                .findById(orderId);
+                verify(orderRepository, never())
+                                .save(any(Order.class));
+                verifyNoInteractions(inventoryService);
+        }
+
+        @Test
+        @DisplayName("TC3_CO: Huỷ đơn hàng nhưng đơn hàng đã được huỷ từ trước")
+        void cancelOrder_When_OrderAlreadyCancelled_Should_ThrowBusinessException() {
+                // Arrange
+                Order order = fakeDataForTest.getOrderFake1();
+                order.setStatus(OrderStatusEnum.CANCELLED);
+                OrderCancelRequest request = OrderCancelRequest.builder()
+                                .orderId(order.getId().toString())
+                                .build();
+                when(orderRepository.findById(order.getId()))
+                                .thenReturn(Optional.of(order));
+                // Act + Assert
+                assertThrows(
+                                OrderAlreadyCancelled.class,
+                                () -> orderService.cancelOrder(request));
+                verify(orderRepository)
+                                .findById(order.getId());
+                verify(orderRepository, never())
+                                .save(any(Order.class));
+                verifyNoInteractions(inventoryService);
         }
 }

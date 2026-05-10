@@ -59,12 +59,12 @@ public class CartService {
     }
 
     private void updateCartTotal(UUID cartId) {
-        Long totalQuantity = this.cartItemRepository.sumQuantity(cartId);
+        Long totalQuantity = this.cartItemRepository.sumQuantity(cartId) ;
         Long totalPrice = this.cartItemRepository.sumPrice(cartId);
 
         Cart cart = this.getCartById(cartId);
-        cart.setTotalQuantity(totalQuantity != null ? totalQuantity : 0L);
-        cart.setTotalPrice(totalPrice != null ? totalPrice : 0L);
+        cart.setTotalQuantity(totalQuantity != null ? totalQuantity : 0);
+        cart.setTotalPrice(totalPrice != null ? totalPrice : 0);
 
         this.cartRepository.save(cart);
     }

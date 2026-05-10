@@ -14,6 +14,17 @@ export const CartCalculation = {
     handleType?: "add" | "update" | "remove";
     coupon?: CouponType;
   }): CalculateCartTotalUnitTestResponse {
+    if (cartItems.length === 0) {
+      return {
+        error: "CART_ITEMS_MUST_NOT_BE_EMPTY",
+        message: "Cart items is empty!",
+        cartItems: cartItems,
+        subtotal: 0,
+        discount: 0,
+        subtotalAfterDiscount: 0,
+      };
+    }
+
     let cartItemsUpdated = [...cartItems];
 
     if (handleCartItem && handleType) {

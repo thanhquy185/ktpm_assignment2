@@ -55,6 +55,18 @@ const Layout: React.FC = () => {
                   <ShoppingCart size={18} />
                   Giỏ hàng
                 </Link>
+                {/* <Link
+                  to="/checkout"
+                  data-testid="nav-checkout"
+                  className={`flex items-center gap-1 px-3 py-2 rounded-lg transition ${
+                    isActive("/checkout")
+                      ? "bg-indigo-100 text-indigo-700 font-semibold"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <ShoppingCart size={18} />
+                  Thanh toán
+                </Link> */}
                 <Link
                   to="/orders"
                   data-testid="nav-orders"
