@@ -2,6 +2,7 @@ package com.shopcart.integration;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,17 +25,21 @@ import com.shopcart.FakeDataForTest;
 import com.shopcart.configs.JwtAuthenticationFilter;
 import com.shopcart.controllers.OrderController;
 import com.shopcart.dtos.request.OrderItemRequest;
+import com.shopcart.dtos.request.OrderCancelRequest;
 import com.shopcart.dtos.request.OrderCreateRequest;
 import com.shopcart.entities.Order;
 import com.shopcart.enums.OrderPaymentMethodEnum;
 import com.shopcart.enums.OrderShippingMethodEnum;
+import com.shopcart.enums.OrderStatusEnum;
 import com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero;
 import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
+import com.shopcart.exceptions.OrderNotFound;
 import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.services.OrderService;
 import com.shopcart.exceptions.CouponNotFound;
 import com.shopcart.exceptions.CouponOutOfDate;
 import com.shopcart.exceptions.InsufficientStock;
+import com.shopcart.exceptions.OrderAlreadyCancelled;
 import com.shopcart.exceptions.ProductNotFoundInInventory;
 import com.shopcart.exceptions.UserNotFound;
 
@@ -322,5 +328,93 @@ public class OrderControllerIntegrationTest {
                                 .content(this.objectMapper.writeValueAsString(request)))
                                 .andExpect(status().isNotFound())
                                 .andExpect(jsonPath("$.error").value("COUPON_OUT_OF_DATE"));
+        }
+
+        @Test
+        @DisplayName("TC1_CO: DELETE /api/orders - Huỷ đơn hàng thành công")
+        void cancelOrder_WhenValidRequest_ShouldReturnCancelledOrder() throws Exception {
+
+                Order cancelledOrder = fakeDataForTest.getOrderFake1();
+                cancelledOrder.setStatus(OrderStatusEnum.CANCELLED);
+
+                OrderCancelRequest request = OrderCancelRequest.builder()
+                                .orderId(cancelledOrder.getId().toString())
+                                .build();
+
+                when(orderService.cancelOrder(any(OrderCancelRequest.class)))
+                                .thenReturn(cancelledOrder);
+
+                mockMvc.perform(delete("/api/orders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+
+                                .andExpect(jsonPath("$.status")
+                                                .value(HttpStatus.OK.value()))
+
+                                .andExpect(jsonPath("$.message")
+                                                .value("Cancel order is successful!"))
+
+                                .andExpect(jsonPath("$.data.id")
+                                                .value(cancelledOrder.getId().toString()))
+
+                                .andExpect(jsonPath("$.data.status")
+                                                .value(OrderStatusEnum.CANCELLED.getDescription()));
+        }
+
+        @Test
+        @DisplayName("TC2_CO: DELETE /api/orders - Huỷ đơn hàng nhưng đơn hàng của người dùng không tồn tại")
+        void cancelOrder_WhenOrderNotFound_ShouldReturnNotFound() throws Exception {
+
+                UUID orderId = UUID.randomUUID();
+
+                OrderCancelRequest request = OrderCancelRequest.builder()
+                                .orderId(orderId.toString())
+                                .build();
+
+                when(orderService.cancelOrder(any(OrderCancelRequest.class)))
+                                .thenThrow(new OrderNotFound(orderId));
+
+                mockMvc.perform(delete("/api/orders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound())
+
+                                .andExpect(jsonPath("$.status")
+                                                .value(HttpStatus.NOT_FOUND.value()))
+
+                                .andExpect(jsonPath("$.error")
+                                                .value("ORDER_NOT_FOUND"))
+
+                                .andExpect(jsonPath("$.message")
+                                                .exists());
+        }
+
+        @Test
+        @DisplayName("TC3_CO: DELETE /api/orders - Huỷ đơn hàng nhưng đơn hàng đã được huỷ từ trước")
+        void cancelOrder_WhenOrderAlreadyCancelled_ShouldReturnBadRequest() throws Exception {
+
+                UUID orderId = fakeDataForTest.getOrderIdFake1();
+
+                OrderCancelRequest request = OrderCancelRequest.builder()
+                                .orderId(orderId.toString())
+                                .build();
+
+                when(orderService.cancelOrder(any(OrderCancelRequest.class)))
+                                .thenThrow(new OrderAlreadyCancelled(orderId));
+
+                mockMvc.perform(delete("/api/orders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest())
+
+                                .andExpect(jsonPath("$.status")
+                                                .value(HttpStatus.BAD_REQUEST.value()))
+
+                                .andExpect(jsonPath("$.error")
+                                                .value("ORDER_ALREADY_CANCELLED"))
+
+                                .andExpect(jsonPath("$.message")
+                                                .exists());
         }
 }
