@@ -91,9 +91,9 @@ Coverage ≥ 85% cho CartService
 ##### addToCart()
 
 - TC1_ATC: Thêm sản phẩm thành công
-- TC2_ATC: Thêm sản phẩm thành công vào giỏ hàng, cập nhật tổng trong giỏ hàng
-- TC3_ATC: Thêm sản phẩm nhưng sản phẩm không tồn tại
-- TC4_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn hoặc bằng 0
+- TC2_ATC: Thêm sản phẩm nhưng sản phẩm không tồn tại
+- TC3_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn 0
+- TC4_ATC: Thêm sản phẩm nhưng số lượng sản phẩm bằng 0
 - TC5_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại
 - TC6_ATC: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ
 - TC7_ATC: Thêm sản phẩm nhưng người dùng không tồn tại
@@ -179,7 +179,6 @@ Coverage ≥ 85% cho OrderService
 - TC1_CO: Huỷ đơn hàng thành công
 - TC2_CO: Huỷ đơn hàng nhưng đơn hàng của người dùng không tồn tại
 - TC3_CO: Huỷ đơn hàng nhưng đơn hàng đã được huỷ từ trước
-- TC4_CO: Huỷ đơn hàng nhưng số lượng sản phẩm bé hơn hoặc bằng (tăng tồn kho sản phẩm)
 
 #### Phân công
 
@@ -189,7 +188,7 @@ Coverage ≥ 85% cho OrderService
 | Trần Thanh Quy       | checkStockBeforeOrder() | TC1 → TC4  | ✅
 | Trần Thanh Quy       | calculateOrderTotal()   |    TC1     | ✅
 | Danh Thị Ngọc Châu   | createOrder()           | TC1 → TC6  | ✅
-| Đỗ Nhật Huy          | cancelOrder()           | TC1 → TC4  |
+| Đỗ Nhật Huy          | cancelOrder()           | TC1 → TC3  |
 | Nguyễn Đình Quốc Huy | createOrder()           | TC7 → TC11 | ✅
 
 ---
