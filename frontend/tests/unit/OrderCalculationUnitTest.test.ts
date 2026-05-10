@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { OrderCalculation } from "../../src/services/calculation/OrderCalculation";
+import { OrderCalculation } from "../../src/services/calculation/orderCalculation";
 
 describe("Order Calculation Unit Tests", () => {
   test("TC1: Test tính tổng giá trước giảm giá", () => {

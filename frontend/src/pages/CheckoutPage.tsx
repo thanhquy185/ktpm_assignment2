@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
 import { HttpStatusCode } from "axios";
-import { useAuth } from "../contexts/AuthContext";
-import CartComponent from "../components/Cart";
-import CheckoutComponent from "../components/Checkout";
 import { CartApi } from "../services/api/cartApi";
+import { useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { toast } from "react-toastify";
 import type { CartType } from "../types/cart";
-import CartSummaryComponent from "../components/CartSummary";
+import CheckoutComponent from "../components/Checkout";
+import CheckoutSummaryComponent from "../components/CheckoutSummary";
 
-const CartPage: React.FC = () => {
+const CheckOutPage: React.FC = () => {
   const { user } = useAuth();
 
   const [cart, setCart] = useState<CartType>();
@@ -25,17 +24,13 @@ const CartPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const loadCart = async () => {
-      setLoading(true);
+    setLoading(true);
 
-      if (user?.id) {
-        await fetchCartByUserId(user.id);
-      }
+    if (user && user.id) {
+      fetchCartByUserId(user.id);
+    }
 
-      setLoading(false);
-    };
-
-    loadCart();
+    setLoading(false);
   }, [user]);
 
   if (loading) {
@@ -49,17 +44,18 @@ const CartPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cart Component */}
-        <CartComponent
+        {/* Checkout Component */}
+        <CheckoutComponent cartItems={cart?.cartItems || []} />
+        {/* Checkout Summary Component */}
+        <CheckoutSummaryComponent
           userId={user?.id || ""}
+          subtotal={cart?.totalPrice || 0}
           cartItems={cart?.cartItems || []}
           fetchCartByUserId={fetchCartByUserId}
         />
-        {/* Cart Summary Component*/}
-        {cart && <CartSummaryComponent cart={cart} />}
       </div>
     </div>
   );
 };
 
-export default CartPage;
+export default CheckOutPage;

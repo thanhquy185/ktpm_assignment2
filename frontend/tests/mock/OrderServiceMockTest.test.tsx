@@ -12,7 +12,7 @@ vi.mock("../../src/services/api/customize", () => {
 
 describe("Order API Mock Tests", () => {
   const mockOrderRequest = {
-    userId: "user-123",
+    userId: "3edeba20-2be4-4725-9197-9b55d824942b",
     couponId: "coupon-456",
     shippingAddress: "123 Le Loi, HCM",
     shippingMethod: "FAST",
@@ -25,25 +25,31 @@ describe("Order API Mock Tests", () => {
     vi.clearAllMocks();
   });
 
-  test("TC10: Tạo đơn hàng nhưng người dùng không tồn tại", async () => {
+  test("TC9: Tạo đơn hàng nhưng người dùng không tồn tại", async () => {
     const mockError = { response: { data: { message: "USER_NOT_FOUND" } } };
     (instance.post as any).mockRejectedValueOnce(mockError);
 
-    await expect(OrderApi.createOrder(mockOrderRequest)).rejects.toEqual(mockError);
+    await expect(OrderApi.createOrder(mockOrderRequest)).rejects.toEqual(
+      mockError,
+    );
     expect(instance.post).toHaveBeenCalledTimes(1);
   });
 
-  test("TC11: Tạo đơn hàng nhưng mã giảm giá không tồn tại", async () => {
+  test("TC10: Tạo đơn hàng nhưng mã giảm giá không tồn tại", async () => {
     const mockError = { response: { data: { message: "COUPON_NOT_FOUND" } } };
     (instance.post as any).mockRejectedValueOnce(mockError);
 
-    await expect(OrderApi.createOrder(mockOrderRequest)).rejects.toEqual(mockError);
+    await expect(OrderApi.createOrder(mockOrderRequest)).rejects.toEqual(
+      mockError,
+    );
   });
 
-  test("TC12: Tạo đơn hàng nhưng mã giảm giá hết hạn", async () => {
+  test("TC11: Tạo đơn hàng nhưng mã giảm giá hết hạn", async () => {
     const mockError = { response: { data: { message: "COUPON_EXPIRED" } } };
     (instance.post as any).mockRejectedValueOnce(mockError);
 
-    await expect(OrderApi.createOrder(mockOrderRequest)).rejects.toEqual(mockError);
+    await expect(OrderApi.createOrder(mockOrderRequest)).rejects.toEqual(
+      mockError,
+    );
   });
 });

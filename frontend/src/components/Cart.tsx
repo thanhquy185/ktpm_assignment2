@@ -21,9 +21,15 @@ const CartComponent: React.FC<CartComponentProps> = ({
     if (!userId) return;
 
     const confirmCancel = window.confirm(
-      "Bạn có chắc muốn xoá sản phẩm này khỏi giỏ hàng này không?",
+      "Bạn có chắc muốn cập nhật số lượng sản phẩm này trong giỏ hàng không?",
     );
     if (!confirmCancel) return;
+
+    if (quantity <= 0) {
+      toast.warning("Không thể giảm số lượng nếu đang là 1 !");
+
+      return;
+    }
 
     const response = await CartApi.updateQuantity(userId, {
       productId: productId,

@@ -263,6 +263,7 @@ Các endpoint còn lại được khuyến khích triển khai thêm để hoàn
 
 - Kiểm tra tồn kho thành công
 - Kiểm tra tồn kho nhưng có 1 sản phẩm có số lượng cần so sánh bé hơn hoặc bằng 0
+- Kiểm tra tồn kho nhưng có 1 sản phẩm có số lượng cần so sánh bằng 0
 - Kiểm tra tồn kho nhưng có 1 sản phẩm không tồn tại trong tồn kho
 
 ## Phân công
@@ -430,7 +431,7 @@ Verify repository interactions và kiểm tra dữ liệu sau khi service xử l
 | Trần Thanh Quy       | getOrderById()                     |    All    | ✅
 | Trần Thanh Quy       | checkStockBeforeOrder()            |    All    | ✅
 | Trần Thanh Quy       | calculateOrderTotal()              |    All    | ✅
-| Danh Thị Ngọc Châu   | createOrder()                      |   1 → 6   |
+| Danh Thị Ngọc Châu   | createOrder()                      |   1 → 6   | ✅
 | Đỗ Nhật Huy          | getOrdersByUserId()                |    All    |
 | Đỗ Nhật Huy          | cancelOrder()                      |    All    |
 | Nguyễn Đình Quốc Huy | checkQuantityAndPriceBeforeOrder() |    All    | ✅

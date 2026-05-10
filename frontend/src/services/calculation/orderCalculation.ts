@@ -12,6 +12,19 @@ export const OrderCalculation = {
     shippingFee: number;
     coupon?: CouponType;
   }): CalculateOrderTotalUnitTestResponse {
+    if (orderItems.length === 0) {
+      return {
+        error: "ORDER_ITEM_MUST_NOT_BE_EMPTY",
+        message: "Order items is empty!",
+        orderItems: orderItems,
+        subtotal: 0,
+        shippingFee: shippingFee,
+        discount: 0,
+        totalPriceBeforeDiscount: 0,
+        totalPriceAfterDiscount: 0,
+      };
+    }
+
     // - Tổng tiền sản phẩm
     const newSubtotal = orderItems.reduce(
       (sum, orderItem) => sum + orderItem.quantity * orderItem.price,

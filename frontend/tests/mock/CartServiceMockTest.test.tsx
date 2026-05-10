@@ -3,13 +3,13 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { CartApi } from "../../src/services/api/cartApi";
-import CartComponent from "../../src/components/Cart";
 import { formatPrice } from "../../src/utils/priceCalculation";
 import { HttpStatusCode } from "axios";
 import {
   CartItemAddToCartRequest,
   CartItemType,
 } from "../../src/types/cartItem";
+import CartComponent from "../../src/components/Cart";
 
 const cartItemFakeData1: CartItemType = {
   id: "CI-001",
@@ -40,6 +40,7 @@ const navigate = vi.fn();
 
 vi.mock("../../src/services/api/cartApi", () => ({
   CartApi: {
+    addToCart: vi.fn(),
     updateQuantity: vi.fn(),
     removeFromCart: vi.fn(),
   },
@@ -67,72 +68,45 @@ beforeEach(() => {
 });
 
 describe("Cart Component Integration Tests", () => {
-  test("TC1: Giỏ hàng rỗng", () => {
+  test("TC7: Thêm sản phẩm nhưng người dùng không tồn tại", async () => {
+    vi.mocked(CartApi.updateQuantity).mockResolvedValue({
+      status: HttpStatusCode.BadRequest,
+      error: "USER_NOT_FOUND",
+      message: "User ID USER-001 not found!",
+      data: {
+        id: "CART-001",
+      },
+    } as any);
+
+    const fetchCartByUserId = vi.fn();
+
     render(
       <CartComponent
         userId="USER-001"
-        cartItems={[]}
-        fetchCartByUserId={vi.fn()}
+        cartItems={[cartItemFakeData1]}
+        fetchCartByUserId={fetchCartByUserId}
       />,
     );
 
-    const emptyCartInform = screen.getByTestId("empty-cart-inform");
-
-    expect(emptyCartInform.textContent).toContain(
-      "Giỏ hàng của bạn đang trống",
+    const increaseButton = screen.getByTestId(
+      "cart-item-increase-quantity-button-CI-001",
     );
+    fireEvent.click(increaseButton);
+
+    await waitFor(() => {
+      expect(CartApi.updateQuantity).toHaveBeenCalledTimes(1);
+      expect(CartApi.updateQuantity).toHaveBeenCalledWith("USER-001", {
+        productId: "PRO-001",
+        quantity: 3,
+      } as CartItemAddToCartRequest);
+    });
+
+    expect(fetchCartByUserId).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledTimes(1);
+    expect(toast.error).toHaveBeenCalledWith("User ID USER-001 not found!");
   });
 
-  test('TC2: Nhấn nút "Tiếp tục mua sắm" khi giỏ hàng rỗng', () => {
-    render(
-      <CartComponent
-        userId="USER-001"
-        cartItems={[]}
-        fetchCartByUserId={vi.fn()}
-      />,
-    );
-
-    const goToProductsPageButton = screen.getByTestId(
-      "go-to-products-page-button",
-    );
-    fireEvent.click(goToProductsPageButton);
-
-    expect(navigate).toHaveBeenCalledWith("/products");
-  });
-
-  test("TC3: Giỏ hàng có sản phẩm", () => {
-    render(
-      <CartComponent
-        userId="USER-001"
-        cartItems={[cartItemFakeData1, cartItemFakeData2]}
-        fetchCartByUserId={vi.fn()}
-      />,
-    );
-
-    // Laptop Dell
-    const productName1 = screen.getByTestId("cart-item-product-name-CI-001");
-    const productCategory1 = screen.getByTestId(
-      "cart-item-product-category-CI-001",
-    );
-    const productPrice1 = screen.getByTestId("cart-item-product-price-CI-001");
-    // Macbook M4 Air
-    const productName2 = screen.getByTestId("cart-item-product-name-CI-002");
-    const productCategory2 = screen.getByTestId(
-      "cart-item-product-category-CI-002",
-    );
-    const productPrice2 = screen.getByTestId("cart-item-product-price-CI-002");
-
-    // Laptop Dell
-    expect(productName1.textContent).toBe("Laptop Dell");
-    expect(productCategory1.textContent).toBe("Laptop");
-    expect(productPrice1.textContent).toBe(formatPrice(20000));
-    // Macbook M4 Air
-    expect(productName2.textContent).toBe("Macbook M4 Air");
-    expect(productCategory2.textContent).toBe("Macbook");
-    expect(productPrice2.textContent).toBe(formatPrice(50000));
-  });
-
-  test("TC4: Giỏ hàng có sản phẩm và tăng số lượng 1 sản phẩm thành công", async () => {
+  test("TC8: Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)", async () => {
     vi.mocked(CartApi.updateQuantity).mockResolvedValue({
       status: HttpStatusCode.Ok,
       error: null,
@@ -158,6 +132,7 @@ describe("Cart Component Integration Tests", () => {
     fireEvent.click(increaseButton);
 
     await waitFor(() => {
+      expect(CartApi.updateQuantity).toHaveBeenCalledTimes(1);
       expect(CartApi.updateQuantity).toHaveBeenCalledWith("USER-001", {
         productId: "PRO-001",
         quantity: 3,
@@ -170,5 +145,46 @@ describe("Cart Component Integration Tests", () => {
     expect(toast.success).toHaveBeenCalledWith(
       "Update product quantity in cart is successful!",
     );
+  });
+
+  test("TC9: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ", async () => {
+    vi.mocked(CartApi.updateQuantity).mockResolvedValue({
+      status: HttpStatusCode.BadRequest,
+      error: "INSUFFICIENT_STOCK",
+      message: "Insufficient stock!",
+      data: null,
+    } as any);
+
+    const fetchCartByUserId = vi.fn();
+
+    render(
+      <CartComponent
+        userId="USER-001"
+        cartItems={[
+          {
+            ...cartItemFakeData1,
+            quantity: 5, // Ban đầu là 2, thay đổi thành 5 khi tăng lên 6 sẽ lỗi
+          },
+        ]}
+        fetchCartByUserId={fetchCartByUserId}
+      />,
+    );
+
+    const increaseButton = screen.getByTestId(
+      "cart-item-increase-quantity-button-CI-001",
+    );
+    fireEvent.click(increaseButton);
+
+    await waitFor(() => {
+      expect(CartApi.updateQuantity).toHaveBeenCalledTimes(1);
+      expect(CartApi.updateQuantity).toHaveBeenCalledWith("USER-001", {
+        productId: "PRO-001",
+        quantity: 6,
+      } as CartItemAddToCartRequest);
+    });
+
+    expect(fetchCartByUserId).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledTimes(1);
+    expect(toast.error).toHaveBeenCalledWith("Insufficient stock!");
   });
 });
