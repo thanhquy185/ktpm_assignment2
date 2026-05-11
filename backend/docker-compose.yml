@@ -4,9 +4,9 @@ services:
     image: postgres:14.1-alpine
     container_name: postgres_container
     environment:
+      POSTGRES_DB: shopcart
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: shopcart
     ports:
       - "5433:5432"
     volumes:
