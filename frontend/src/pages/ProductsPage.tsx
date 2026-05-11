@@ -34,7 +34,12 @@ const ProductsPage: React.FC = () => {
     } as CartItemAddToCartRequest);
     if (response.status === HttpStatusCode.Created && response.data) {
       await fetchProducts();
-      toast.success("Thêm sản phẩm vào giỏ hàng thành công!");
+      toast.success(
+        <div data-testid="toast-add-to-cart-success">
+          Thêm sản phẩm vào giỏ hàng thành công!
+        </div>,
+        { autoClose: false },
+      );
     } else if ((response as any).error) {
       toast.error((response as any).message);
     }

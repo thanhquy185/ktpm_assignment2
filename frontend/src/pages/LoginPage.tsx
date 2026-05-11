@@ -55,13 +55,14 @@ const LoginPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tên mật khẩu
+              Tên tài khoản
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Nhập tên mật khẩu"
+              placeholder="Nhập tên tài khoản"
+              data-testid="login-username-input"
               className="w-full px-4 py-2 border rounded-lg"
             />
           </div>
@@ -74,6 +75,7 @@ const LoginPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Nhập mật khẩu"
+              data-testid="login-password-input"
               className="w-full px-4 py-2 border rounded-lg"
             />
           </div>
@@ -85,6 +87,7 @@ const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
+              data-testid="login-button"
             className="w-full bg-indigo-600 text-white py-2 mt-10 rounded-lg"
           >
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}

@@ -27,7 +27,7 @@ const ProductCardComponent: React.FC<ProductCardComponentProps> = ({
 
   return (
     <div
-      data-testid={`product-card-${product?.id}`}
+      data-testid={`product-card-card-${product?.id}`}
       className="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden"
     >
       {/* Image */}
@@ -58,7 +58,7 @@ const ProductCardComponent: React.FC<ProductCardComponentProps> = ({
         {/* Name */}
         <h3
           className="text-lg font-semibold text-gray-900 mb-2"
-          data-testid={`product-name-${product?.id}`}
+          data-testid={`product-card-name-${product?.id}`}
         >
           {product?.name}
         </h3>
@@ -73,7 +73,7 @@ const ProductCardComponent: React.FC<ProductCardComponentProps> = ({
           </span>
           <span
             className="text-2xl font-bold text-indigo-600"
-            data-testid={`product-price-${product?.id}`}
+            data-testid={`product-card-price-${product?.id}`}
           >
             {formatPrice(product.price || 0)}
           </span>
@@ -81,7 +81,7 @@ const ProductCardComponent: React.FC<ProductCardComponentProps> = ({
         {/* Button */}
         <button
           onClick={handleClick}
-          data-testid={`add-to-cart-btn-${product?.id}`}
+          data-testid={`product-card-button-${product?.id}`}
           className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center justify-center gap-2"
           disabled={
             adding ||
