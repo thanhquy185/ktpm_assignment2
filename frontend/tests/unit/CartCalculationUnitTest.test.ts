@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { CartCalculation } from "../../src/services/calculation/CartCalculation";
+import { CartCalculation } from "../../src/services/calculation/cartCalculation";
 
 describe("Cart Calculation Unit Tests", () => {
   test("TC1: Test giỏ hàng rỗng", () => {
