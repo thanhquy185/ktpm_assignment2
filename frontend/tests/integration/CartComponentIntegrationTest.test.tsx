@@ -4,12 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { CartApi } from "../../src/services/api/cartApi";
 import CartComponent from "../../src/components/Cart";
+import CartSummaryComponent from "../../src/components/CartSummary";
 import { formatPrice } from "../../src/utils/priceCalculation";
 import { HttpStatusCode } from "axios";
 import {
   CartItemAddToCartRequest,
   CartItemType,
 } from "../../src/types/cartItem";
+import { CartType } from "../../src/types/cart";
 
 const cartItemFakeData1: CartItemType = {
   id: "CI-001",
@@ -170,5 +172,171 @@ describe("Cart Component Integration Tests", () => {
     expect(toast.success).toHaveBeenCalledWith(
       "Update product quantity in cart is successful!",
     );
+  });
+
+  test("TC5: Giỏ hàng có sản phẩm và giảm số lượng 1 sản phẩm thành công", async () => {
+    vi.mocked(CartApi.updateQuantity).mockResolvedValue({
+      status: HttpStatusCode.Ok,
+      error: null,
+      message: "Update product quantity in cart is successful!",
+      data: {
+        id: "CART-001",
+      },
+    } as any);
+
+    const fetchCartByUserId = vi.fn();
+
+    render(
+      <CartComponent
+        userId="USER-001"
+        cartItems={[cartItemFakeData1]}
+        fetchCartByUserId={fetchCartByUserId}
+      />,
+    );
+
+    const decreaseButton = screen.getByTestId(
+      "cart-item-decrease-quantity-button-CI-001",
+    );
+
+    fireEvent.click(decreaseButton);
+
+    await waitFor(() => {
+      expect(CartApi.updateQuantity).toHaveBeenCalledWith("USER-001", {
+        productId: "PRO-001",
+        quantity: 1,
+      } as CartItemAddToCartRequest);
+      expect(fetchCartByUserId).toHaveBeenCalledTimes(1);
+      expect(fetchCartByUserId).toHaveBeenCalledWith("USER-001");
+
+      expect(toast.success).toHaveBeenCalledTimes(1);
+      expect(toast.success).toHaveBeenCalledWith(
+        "Update product quantity in cart is successful!",
+      );
+    });
+
+  });
+
+  test("TC6: Giỏ hàng có sản phẩm và giảm số lượng 1 sản phẩm nhưng số lượng trong giỏ đang là 1", async () => {
+    const fetchCartByUserId = vi.fn();
+
+    render(
+      <CartComponent
+        userId="USER-001"
+        cartItems={[cartItemFakeData2]} // quantity = 1
+        fetchCartByUserId={fetchCartByUserId}
+      />,
+    );
+
+    const decreaseButton = screen.getByTestId(
+      "cart-item-decrease-quantity-button-CI-002",
+    );
+
+    fireEvent.click(decreaseButton);
+
+    await waitFor(() => {
+      expect(CartApi.updateQuantity).not.toHaveBeenCalled();
+      expect(fetchCartByUserId).not.toHaveBeenCalled();
+
+      expect(toast.warning).toHaveBeenCalledTimes(1);
+      expect(toast.warning).toHaveBeenCalledWith(
+        "Không thể giảm số lượng nếu đang là 1 !",
+      );
+    });
+  });
+
+  test("TC7: Giỏ hàng có sản phẩm và xoá 1 sản phẩm thành công", async () => {
+    vi.mocked(CartApi.removeFromCart).mockResolvedValue({
+      status: HttpStatusCode.Ok,
+      error: null,
+      message: "Remove product from cart is successful!",
+      data: {
+        id: "CART-001",
+      },
+    } as any);
+
+    const fetchCartByUserId = vi.fn();
+
+    render(
+      <CartComponent
+        userId="USER-001"
+        cartItems={[cartItemFakeData1]}
+        fetchCartByUserId={fetchCartByUserId}
+      />,
+    );
+
+    const removeButton = screen.getByTestId(
+      "cart-item-remove-button-CI-001",
+    );
+
+    fireEvent.click(removeButton);
+
+    await waitFor(() => {
+      expect(CartApi.removeFromCart).toHaveBeenCalledWith("USER-001", {
+        productId: "PRO-001",
+      });
+      expect(fetchCartByUserId).toHaveBeenCalledTimes(1);
+      expect(fetchCartByUserId).toHaveBeenCalledWith("USER-001");
+
+      expect(toast.success).toHaveBeenCalledTimes(1);
+      expect(toast.success).toHaveBeenCalledWith(
+        "Xoá sản phẩm trong giỏ thành công !",
+      );
+    });
+  });
+
+  test('TC8: Nhấn nút "Thanh toán ngay" khi giỏ hàng rỗng', () => {
+    const emptyCart: CartType = {
+      id: "CART-001",
+      user: {
+        id: "USER-001",
+        username: "nhathuy",
+        role: "USER",
+      },
+      totalQuantity: 0,
+      totalPrice: 0,
+      cartItems: [],
+    };
+
+    render(<CartSummaryComponent cart={emptyCart} />);
+
+    const checkoutButton = screen.getByRole("button", {
+      name: "Thanh toán ngay",
+    });
+
+    fireEvent.click(checkoutButton);
+
+    expect(toast.warning).toHaveBeenCalledTimes(1);
+    expect(toast.warning).toHaveBeenCalledWith(
+      "Không thể thanh toán khi giỏ hàng rỗng!",
+    );
+
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  test('TC9: Nhấn nút "Thanh toán ngay" khi giỏ hàng có sản phẩm', () => {
+    const cartWithItems: CartType = {
+      id: "CART-001",
+      user: {
+        id: "USER-001",
+        username: "nhathuy",
+        role: "USER",
+      },
+      totalQuantity: 3,
+      totalPrice: 90000,
+      cartItems: [cartItemFakeData1, cartItemFakeData2],
+    };
+
+    render(<CartSummaryComponent cart={cartWithItems} />);
+
+    const checkoutButton = screen.getByRole("button", {
+      name: "Thanh toán ngay",
+    });
+
+    fireEvent.click(checkoutButton);
+
+    expect(toast.warning).not.toHaveBeenCalled();
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith("/checkout");
   });
 });

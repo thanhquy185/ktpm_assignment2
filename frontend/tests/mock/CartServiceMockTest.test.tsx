@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { CartApi } from "../../src/services/api/cartApi";
+import { ProductApi } from "../../src/services/api/productApi";
 import { formatPrice } from "../../src/utils/priceCalculation";
 import { HttpStatusCode } from "axios";
 import {
@@ -10,6 +11,16 @@ import {
   CartItemType,
 } from "../../src/types/cartItem";
 import CartComponent from "../../src/components/Cart";
+import ProductsPage from "../../src/pages/ProductsPage"
+const productFakeData1 = {
+  id: "PRO-001",
+  name: "Laptop Dell",
+  category: { id: "CAT-001", name: "Laptop" },
+  inventory: { id: "INV-001", stock: 5 },
+  price: 20000,
+  status: "Đang bán",
+  description: "Laptop sinh viên",
+};
 
 const cartItemFakeData1: CartItemType = {
   id: "CI-001",
@@ -45,6 +56,19 @@ vi.mock("../../src/services/api/cartApi", () => ({
     removeFromCart: vi.fn(),
   },
 }));
+vi.mock("../../src/services/api/productApi", () => ({
+  ProductApi: {
+    getAllProduct: vi.fn(),
+  },
+}));
+vi.mock("../../src/contexts/AuthContext", () => ({
+  useAuth: () => ({
+    user: {
+      id: "USER-001",
+    },
+  }),
+}));
+
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
@@ -65,9 +89,171 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(useNavigate).mockReturnValue(navigate);
   vi.mocked(window.confirm).mockReturnValue(true);
+  vi.mocked(ProductApi.getAllProduct).mockResolvedValue({
+    status: HttpStatusCode.Ok,
+    data: [productFakeData1],
+  } as any);
 });
 
 describe("Cart Component Integration Tests", () => {
+  test("TC1: Thêm sản phẩm thành công", async () => {
+    vi.mocked(CartApi.addToCart).mockResolvedValue({
+      status: HttpStatusCode.Created,
+      error: null,
+      message: "Add product to cart is successful!",
+      data: {
+        id: "CART-001",
+      },
+    } as any);
+
+    render(<ProductsPage />);
+
+    const addButton = await screen.findByTestId(
+      "add-to-cart-btn-PRO-001",
+    );
+
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(CartApi.addToCart).toHaveBeenCalledTimes(1);
+
+      expect(CartApi.addToCart).toHaveBeenCalledWith(
+        "USER-001",
+        {
+          productId: "PRO-001",
+          quantity: 1,
+        },
+      );
+      expect(toast.success).toHaveBeenCalledTimes(1);
+
+      expect(toast.success).toHaveBeenCalledWith(
+        "Thêm sản phẩm vào giỏ hàng thành công!",
+      );
+    });
+  });
+
+  test("TC2: Thêm sản phẩm nhưng sản phẩm không tồn tại", async () => {
+    vi.mocked(CartApi.addToCart).mockResolvedValue({
+      status: HttpStatusCode.NotFound,
+      error: "PRODUCT_NOT_FOUND",
+      message: "Product not found!",
+      data: null,
+    } as any);
+
+    render(<ProductsPage />);
+
+    const addButton = await screen.findByTestId(
+      "add-to-cart-btn-PRO-001",
+    );
+
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(CartApi.addToCart).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledTimes(1);
+
+      expect(toast.error).toHaveBeenCalledWith(
+        "Product not found!",
+      );
+    });
+  });
+
+  test("TC3: Thêm sản phẩm nhưng số lượng sản phẩm bé hơn 0", async () => {
+    vi.mocked(CartApi.addToCart).mockResolvedValue({
+      status: HttpStatusCode.BadRequest,
+      error: "CART_ITEM_QUANTITY_GREATER_THAN_ZERO",
+      message: "Quantity must be greater than 0!",
+      data: null,
+    } as any);
+
+    render(<ProductsPage />);
+
+    const addButton = await screen.findByTestId(
+      "add-to-cart-btn-PRO-001",
+    );
+
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(CartApi.addToCart).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledWith(
+        "Quantity must be greater than 0!",
+      );
+    });
+  });
+
+  test("TC4: Thêm sản phẩm nhưng số lượng sản phẩm bằng 0", async () => {
+    vi.mocked(CartApi.addToCart).mockResolvedValue({
+      status: HttpStatusCode.BadRequest,
+      error: "CART_ITEM_QUANTITY_GREATER_THAN_ZERO",
+      message: "Quantity cannot be 0!",
+      data: null,
+    } as any);
+
+    render(<ProductsPage />);
+
+    const addButton = await screen.findByTestId(
+      "add-to-cart-btn-PRO-001",
+    );
+
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(CartApi.addToCart).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledWith(
+        "Quantity cannot be 0!",
+      );
+    });
+  });
+
+  test("TC5: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại", async () => {
+    vi.mocked(CartApi.addToCart).mockResolvedValue({
+      status: HttpStatusCode.NotFound,
+      error: "PRODUCT_NOT_FOUND_IN_INVENTORY",
+      message: "Product not found in inventory!",
+      data: null,
+    } as any);
+
+    render(<ProductsPage />);
+
+    const addButton = await screen.findByTestId(
+      "add-to-cart-btn-PRO-001",
+    );
+
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(CartApi.addToCart).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledWith(
+        "Product not found in inventory!",
+      );
+    });
+  });
+
+  test("TC6: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ", async () => {
+    vi.mocked(CartApi.addToCart).mockResolvedValue({
+      status: HttpStatusCode.BadRequest,
+      error: "INSUFFICIENT_STOCK",
+      message: "Insufficient stock!",
+      data: null,
+    } as any);
+
+    render(<ProductsPage />);
+
+    const addButton = await screen.findByTestId(
+      "add-to-cart-btn-PRO-001",
+    );
+
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(CartApi.addToCart).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledWith(
+        "Insufficient stock!",
+      );
+    });
+
+  });
   test("TC7: Thêm sản phẩm nhưng người dùng không tồn tại", async () => {
     vi.mocked(CartApi.updateQuantity).mockResolvedValue({
       status: HttpStatusCode.BadRequest,
