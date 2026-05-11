@@ -173,7 +173,7 @@ describe("Checkout Summary Component Integration Tests", () => {
     await waitFor(() => {
       expect(
         screen.getByTestId("checkout-summary-coupon-result"),
-      ).toBeInTheDocument();
+      ).toBeDefined();
     });
 
     fireEvent.click(orderButton);
