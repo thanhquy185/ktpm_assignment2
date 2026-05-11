@@ -14,17 +14,6 @@ const ProductCardComponent: React.FC<ProductCardComponentProps> = ({
 }) => {
   const [adding, setAdding] = useState(false);
 
-  const handleClick = async () => {
-    try {
-      setAdding(true);
-      await onAddToCart(product);
-    } catch (err) {
-      alert("Không thể thêm vào giỏ hàng");
-    } finally {
-      setAdding(false);
-    }
-  };
-
   return (
     <div
       data-testid={`product-card-card-${product?.id}`}
@@ -80,7 +69,7 @@ const ProductCardComponent: React.FC<ProductCardComponentProps> = ({
         </div>
         {/* Button */}
         <button
-          onClick={handleClick}
+          type="button"
           data-testid={`product-card-button-${product?.id}`}
           className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center justify-center gap-2"
           disabled={
@@ -88,6 +77,13 @@ const ProductCardComponent: React.FC<ProductCardComponentProps> = ({
             product?.inventory?.stock! === 0 ||
             product?.status === "Dừng bán"
           }
+          onClick={async (e) => {
+            e.preventDefault();
+
+            setAdding(true);
+            await onAddToCart(product);
+            setAdding(false);
+          }}
         >
           <ShoppingCart size={18} />
           {adding ? "Đang thêm..." : "Thêm vào giỏ"}

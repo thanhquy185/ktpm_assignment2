@@ -64,7 +64,12 @@ const CartComponent: React.FC<CartComponentProps> = ({
 
   return (
     <div className="lg:col-span-2 space-y-4">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Giỏ hàng</h1>
+      <h1
+        data-testid="cart-title"
+        className="text-3xl font-bold text-gray-900 mb-2"
+      >
+        Giỏ hàng
+      </h1>
       {cartItems?.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <div className="text-5xl mb-3">🛒</div>

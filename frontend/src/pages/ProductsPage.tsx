@@ -38,8 +38,8 @@ const ProductsPage: React.FC = () => {
         <div data-testid="toast-add-to-cart-success">
           Thêm sản phẩm vào giỏ hàng thành công!
         </div>,
-        { autoClose: false },
       );
+      // window.alert("Thêm sản phẩm vào giỏ hàng thành công!");
     } else if ((response as any).error) {
       toast.error((response as any).message);
     }
@@ -68,8 +68,8 @@ const ProductsPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1
-          className="text-3xl font-bold text-gray-900 mb-4"
           data-testid="products-title"
+          className="text-3xl font-bold text-gray-900 mb-4"
         >
           Sản phẩm
         </h1>
