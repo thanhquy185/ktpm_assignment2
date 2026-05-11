@@ -243,14 +243,13 @@ Test với mocked successful/failed responses và verify mock calls
 - TC5: Thêm sản phẩm nhưng tồn kho của sản phẩm không tồn tại
 - TC6: Thêm sản phẩm nhưng tồn kho của sản phẩm không đủ
 - TC7: Thêm sản phẩm nhưng người dùng không tồn tại
-- TC8: Thêm sản phẩm đã có trong giỏ (cộng dồn số lượng)
-- TC9: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ
+- TC8: Thêm sản phẩm đã có trong giỏ nhưng tồn kho của sản phẩm không đủ
 
 #### Phân công
 
 | Thành viên     | Test case |
 | -------------- | :-------: |
-| Trần Thanh Quy | TC7 → TC9 |
+| Trần Thanh Quy | TC7 → TC8 |
 | Đỗ Nhật Huy    | TC1 → TC6 |
 
 ### OrderService + InventoryService

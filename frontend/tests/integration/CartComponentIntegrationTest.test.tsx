@@ -213,7 +213,6 @@ describe("Cart Component Integration Tests", () => {
         "Update product quantity in cart is successful!",
       );
     });
-
   });
 
   test("TC6: Giỏ hàng có sản phẩm và giảm số lượng 1 sản phẩm nhưng số lượng trong giỏ đang là 1", async () => {
@@ -264,9 +263,7 @@ describe("Cart Component Integration Tests", () => {
       />,
     );
 
-    const removeButton = screen.getByTestId(
-      "cart-item-remove-button-CI-001",
-    );
+    const removeButton = screen.getByTestId("cart-item-remove-button-CI-001");
 
     fireEvent.click(removeButton);
 

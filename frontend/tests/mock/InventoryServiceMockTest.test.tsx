@@ -27,14 +27,11 @@ describe("Inventory Service Mock Tests", () => {
 
     expect(instance.get).toHaveBeenCalledTimes(1);
 
-    expect(instance.get).toHaveBeenCalledWith(
-      "/inventory/check/PROD-1",
-      {
-        params: {
-          quantity: 2,
-        },
+    expect(instance.get).toHaveBeenCalledWith("/inventory/check/PROD-1", {
+      params: {
+        quantity: 2,
       },
-    );
+    });
   });
 
   test("TC2: Kiểm tra tồn kho nhưng có 1 sản phẩm có số lượng cần so sánh bé hơn 0", async () => {
@@ -48,20 +45,17 @@ describe("Inventory Service Mock Tests", () => {
 
     (instance.get as any).mockRejectedValueOnce(mockError);
 
-    await expect(
-      inventoryService.checkStock("PROD-1", -1),
-    ).rejects.toEqual(mockError);
+    await expect(inventoryService.checkStock("PROD-1", -1)).rejects.toEqual(
+      mockError,
+    );
 
     expect(instance.get).toHaveBeenCalledTimes(1);
 
-    expect(instance.get).toHaveBeenCalledWith(
-      "/inventory/check/PROD-1",
-      {
-        params: {
-          quantity: -1,
-        },
+    expect(instance.get).toHaveBeenCalledWith("/inventory/check/PROD-1", {
+      params: {
+        quantity: -1,
       },
-    );
+    });
   });
 
   test("TC3: Kiểm tra tồn kho nhưng có 1 sản phẩm có số lượng cần so sánh bằng 0", async () => {
@@ -75,20 +69,17 @@ describe("Inventory Service Mock Tests", () => {
 
     (instance.get as any).mockRejectedValueOnce(mockError);
 
-    await expect(
-      inventoryService.checkStock("PROD-1", 0),
-    ).rejects.toEqual(mockError);
+    await expect(inventoryService.checkStock("PROD-1", 0)).rejects.toEqual(
+      mockError,
+    );
 
     expect(instance.get).toHaveBeenCalledTimes(1);
 
-    expect(instance.get).toHaveBeenCalledWith(
-      "/inventory/check/PROD-1",
-      {
-        params: {
-          quantity: 0,
-        },
+    expect(instance.get).toHaveBeenCalledWith("/inventory/check/PROD-1", {
+      params: {
+        quantity: 0,
       },
-    );
+    });
   });
 
   test("TC4: Kiểm tra tồn kho nhưng có 1 sản phẩm không tồn tại trong tồn kho", async () => {
@@ -102,20 +93,17 @@ describe("Inventory Service Mock Tests", () => {
 
     (instance.get as any).mockRejectedValueOnce(mockError);
 
-    await expect(
-      inventoryService.checkStock("PROD-999", 1),
-    ).rejects.toEqual(mockError);
+    await expect(inventoryService.checkStock("PROD-999", 1)).rejects.toEqual(
+      mockError,
+    );
 
     expect(instance.get).toHaveBeenCalledTimes(1);
 
-    expect(instance.get).toHaveBeenCalledWith(
-      "/inventory/check/PROD-999",
-      {
-        params: {
-          quantity: 1,
-        },
+    expect(instance.get).toHaveBeenCalledWith("/inventory/check/PROD-999", {
+      params: {
+        quantity: 1,
       },
-    );
+    });
   });
   test("TC7: Kiểm tra tồn kho nhưng kho hàng không tồn tại", async () => {
     const mockError = {

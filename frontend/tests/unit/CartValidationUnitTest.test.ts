@@ -14,7 +14,7 @@ describe("Cart Validation Unit Tests", () => {
       ...baseCartItem,
       quantity: null as any,
     });
-    expect(result.error).toBe("QUANTITY_IS_NOT_NULL_OR_UNDEFINED");
+    expect(result.error).toBe("QUANTITY_MUST_NOT_BE_NULL_OR_UNDEFINED");
   });
 
   test("TC2: Test trường hợp quantity là undefined", () => {
@@ -22,7 +22,7 @@ describe("Cart Validation Unit Tests", () => {
       ...baseCartItem,
       quantity: undefined as any,
     });
-    expect(result.error).toBe("QUANTITY_IS_NOT_NULL_OR_UNDEFINED");
+    expect(result.error).toBe("QUANTITY_MUST_NOT_BE_NULL_OR_UNDEFINED");
   });
 
   test("TC3: Test trường hợp quantity là số âm", () => {
@@ -57,4 +57,3 @@ describe("Cart Validation Unit Tests", () => {
     expect(result.error).toBeUndefined();
   });
 });
-  
