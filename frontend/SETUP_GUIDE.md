@@ -26,24 +26,31 @@ src/
 ## Cách sử dụng & Testing
 
 ### Chạy Development Server
+
 ```bash
 npm run dev
 ```
+
 Server sẽ chạy trên http://localhost:5173
 
 ### Chạy Unit Tests
+
 ```bash
 npm run test
 ```
+
 Chạy tất cả tests trong dự án
 
 ### Chạy Tests với UI
+
 ```bash
 npm run test:ui
 ```
+
 Mở giao diện web để xem kết quả tests
 
 ### Chạy E2E Tests (Playwright)
+
 ```bash
 npm run e2e              # Headless mode
 npm run e2e:headed       # Headed mode (xem browser)
@@ -55,6 +62,7 @@ npm run e2e:debug        # Debug mode
 Tất cả các components đều có `data-testid` attributes để dễ dàng test:
 
 ### Login Page
+
 ```jsx
 data-testid="login-title"
 data-testid="login-form"
@@ -64,6 +72,7 @@ data-testid="error-message"
 ```
 
 ### Products Page
+
 ```jsx
 data-testid="products-title"
 data-testid="products-grid"
@@ -74,6 +83,7 @@ data-testid="add-to-cart-btn-{id}"
 ```
 
 ### Cart Page
+
 ```jsx
 data-testid="cart-title"
 data-testid="cart-items"
@@ -93,6 +103,7 @@ data-testid="order-success"
 ```
 
 ### Layout/Navigation
+
 ```jsx
 data-testid="header"
 data-testid="logo"
@@ -132,6 +143,7 @@ data-testid="footer"
 ## AuthContext
 
 Quản lý trạng thái đăng nhập:
+
 ```typescript
 {
   user: { id, username } | null

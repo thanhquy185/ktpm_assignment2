@@ -87,7 +87,7 @@ const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-              data-testid="login-button"
+            data-testid="login-button"
             className="w-full bg-indigo-600 text-white py-2 mt-10 rounded-lg"
           >
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}

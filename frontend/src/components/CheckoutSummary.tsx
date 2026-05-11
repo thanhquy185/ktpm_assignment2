@@ -201,21 +201,21 @@ const CheckoutSummaryComponent: React.FC<CheckoutSummaryComponentProps> = ({
             )}
           </span> */}
           {coupon && (
-          <div className="bg-green-50 border border-green-200 p-2 rounded text-sm text-green-700 flex justify-between items-center">
-            <span data-testid="checkout-summary-coupon-result">
-              {coupon.code} -{" "}
-              {coupon.type === "Giảm tiền cố định"
-                ? `Giảm ${formatPrice(coupon.discount || 0)}`
-                : `Giảm ${coupon.discount}%`}
-            </span>
-            <button
-              onClick={() => setCoupon(undefined)}
-              className="text-red-500 text-xs font-medium hover:underline"
-            >
-              Xóa
-            </button>
-          </div>
-        )}
+            <div className="bg-green-50 border border-green-200 p-2 rounded text-sm text-green-700 flex justify-between items-center">
+              <span data-testid="checkout-summary-coupon-result">
+                {coupon.code} -{" "}
+                {coupon.type === "Giảm tiền cố định"
+                  ? `Giảm ${formatPrice(coupon.discount || 0)}`
+                  : `Giảm ${coupon.discount}%`}
+              </span>
+              <button
+                onClick={() => setCoupon(undefined)}
+                className="text-red-500 text-xs font-medium hover:underline"
+              >
+                Xóa
+              </button>
+            </div>
+          )}
           <button
             onClick={() => setCoupon(undefined)}
             className="text-red-500 text-xs font-medium hover:underline"

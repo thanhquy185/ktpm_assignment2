@@ -74,13 +74,13 @@ const CartComponent: React.FC<CartComponentProps> = ({
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <div className="text-5xl mb-3">🛒</div>
           <p
-            data-testId="empty-cart-inform"
+            data-testid="empty-cart-inform"
             className="text-gray-600 text-lg mb-4"
           >
             Giỏ hàng của bạn đang trống
           </p>
           <button
-            data-testId="go-to-products-page-button"
+            data-testid="go-to-products-page-button"
             className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition"
             onClick={() => navigate("/products")}
           >

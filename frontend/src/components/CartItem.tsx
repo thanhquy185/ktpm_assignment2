@@ -18,7 +18,7 @@ const CartItemComponent: React.FC<CartItemComponentProps> = ({
       {/* Image */}
       <div className="w-32 h-24 bg-gray-200 flex items-center justify-center rounded">
         <span
-          data-testId={`cart-item-product-image-${cartItem.id}`}
+          data-testid={`cart-item-product-image-${cartItem.id}`}
           className="text-gray-400 text-xs"
         >
           No Image
@@ -27,19 +27,19 @@ const CartItemComponent: React.FC<CartItemComponentProps> = ({
       {/* Info */}
       <div className="flex-1">
         <h3
-          data-testId={`cart-item-product-name-${cartItem.id}`}
+          data-testid={`cart-item-product-name-${cartItem.id}`}
           className="text-lg font-semibold text-gray-900"
         >
           {cartItem.product?.name}
         </h3>
         <h3
-          data-testId={`cart-item-product-category-${cartItem.id}`}
+          data-testid={`cart-item-product-category-${cartItem.id}`}
           className="text-xm text-gray-500"
         >
           {cartItem.product?.category?.name}
         </h3>
         <p
-          data-testId={`cart-item-product-price-${cartItem.id}`}
+          data-testid={`cart-item-product-price-${cartItem.id}`}
           className="text-lg text-indigo-600 font-bold"
         >
           {formatPrice(cartItem.product?.price || 0)}
@@ -49,7 +49,7 @@ const CartItemComponent: React.FC<CartItemComponentProps> = ({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          data-testId={`cart-item-decrease-quantity-button-${cartItem.id}`}
+          data-testid={`cart-item-decrease-quantity-button-${cartItem.id}`}
           className="p-1 hover:bg-gray-100 rounded"
           onClick={async (e) => {
             e.preventDefault();
@@ -80,14 +80,14 @@ const CartItemComponent: React.FC<CartItemComponentProps> = ({
           className="w-10 h-10 text-center bg-gray-100 rounded outline-none"
         /> */}
         <span
-          data-testId={`cart-item-quantity-${cartItem.id}`}
+          data-testid={`cart-item-quantity-${cartItem.id}`}
           className="w-10 h-10 leading-10 text-center bg-gray-100 rounded outline-none"
         >
           {cartItem.quantity}
         </span>
         <button
           type="button"
-          data-testId={`cart-item-increase-quantity-button-${cartItem.id}`}
+          data-testid={`cart-item-increase-quantity-button-${cartItem.id}`}
           className="p-1 hover:bg-gray-100 rounded"
           onClick={async (e) => {
             e.preventDefault();
@@ -105,7 +105,7 @@ const CartItemComponent: React.FC<CartItemComponentProps> = ({
       </div>
       {/* Remove */}
       <button
-        data-testId={`cart-item-remove-button-${cartItem.id}`}
+        data-testid={`cart-item-remove-button-${cartItem.id}`}
         className="text-red-500 hover:text-red-600"
         onClick={() => onRemoveItem(cartItem.product?.id!)}
       >

@@ -107,11 +107,11 @@ Coverage ≥ 90% (không tính điểm riêng, dùng để đối chiếu chất
 ## Phân công
 
 | Thành viên           | Method                       |
-| -------------------- | ---------------------------- | 
-| Trần Thanh Quy       | calculateOrderTotal()        | ✅  
+| -------------------- | ---------------------------- | --- |
+| Trần Thanh Quy       | calculateOrderTotal()        | ✅  |
 | Danh Thị Ngọc Châu   | validateCartItem()           |
 | Đỗ Nhật Huy          | calculateCartTotal()         |
-| Nguyễn Đình Quốc Huy | checkInventoryAvailability() | ✅  
+| Nguyễn Đình Quốc Huy | checkInventoryAvailability() | ✅  |
 
 ---
 
@@ -133,7 +133,7 @@ Test form submission và API calls
 Test error handling và success messages (không tính điểm riêng, dùng để hoàn thiện bộ test)
 ```
 
-#### Các data-testId (sử dụng getByTestId()) | text (sử dụng getByText())
+#### Các data-testid (sử dụng getByTestId()) | text (sử dụng getByText())
 
 Biến {property} có thể thay đổi giá trị
 
@@ -163,8 +163,8 @@ Biến {property} có thể thay đổi giá trị
 #### Phân công
 
 | Thành viên     | Test case |
-| -------------- | :-------: | 
-| Trần Thanh Quy | TC1 → TC4 | ✅  
+| -------------- | :-------: | --- |
+| Trần Thanh Quy | TC1 → TC4 | ✅  |
 | Đỗ Nhật Huy    | TC5 → TC9 |
 
 ### Checkout Component
@@ -177,7 +177,7 @@ Test PriceCalculator component (tính giá real-time)
 Test InventoryWarning component (cảnh báo hết hàng) (không tính điểm riêng, dùng để mở rộng bài làm)
 ```
 
-#### Các data-testId (sử dụng getByTestId()) | text (sử dụng getByText())
+#### Các data-testid (sử dụng getByTestId()) | text (sử dụng getByText())
 
 Biến {property} có thể thay đổi giá trị
 
@@ -211,9 +211,9 @@ Dành cho Price Calculator Component
 #### Phân công
 
 | Thành viên           | Component        |
-| -------------------- | ---------------- | 
-| Trần Thanh Quy       | Checkout Summary | ✅
-| Nguyễn Đình Quốc Huy | Price Calculator | ✅  
+| -------------------- | ---------------- | --- |
+| Trần Thanh Quy       | Checkout Summary | ✅  |
+| Nguyễn Đình Quốc Huy | Price Calculator | ✅  |
 
 ---
 
