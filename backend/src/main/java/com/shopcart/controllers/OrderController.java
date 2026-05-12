@@ -4,6 +4,7 @@ import com.shopcart.dtos.request.OrderCancelRequest;
 import com.shopcart.dtos.request.OrderCreateRequest;
 import com.shopcart.dtos.response.RestResponse;
 import com.shopcart.entities.Order;
+import com.shopcart.entities.User;
 import com.shopcart.exceptions.CouponNotFound;
 import com.shopcart.exceptions.CouponOutOfDate;
 import com.shopcart.exceptions.InsufficientStock;
@@ -13,10 +14,13 @@ import com.shopcart.exceptions.OrderAlreadyCancelled;
 import com.shopcart.exceptions.OrderItemPriceGreaterThanOrEqualZero;
 import com.shopcart.exceptions.OrderItemQuantityGreaterThanZero;
 import com.shopcart.exceptions.OrderNotFound;
+import com.shopcart.exceptions.OrdersAccessDenied;
 import com.shopcart.exceptions.ProductNotFound;
 import com.shopcart.exceptions.ProductNotFoundInInventory;
 import com.shopcart.exceptions.UserNotFoundInCart;
 import com.shopcart.services.OrderService;
+import com.shopcart.services.UserService;
+import com.shopcart.utils.SecurityUtil;
 import com.shopcart.utils.ValidationUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +39,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class OrderController {
+    private final UserService userService;
     private final OrderService orderService;
 
     @GetMapping("")
@@ -63,8 +68,29 @@ public class OrderController {
     // return ResponseEntity.status(HttpStatus.OK).body(restResponse);
     // }
 
+    @GetMapping("/{userId}/unsafe")
+    public ResponseEntity<?> getOrdersByUserIdUnsafe(@PathVariable("userId") String userId) {
+        List<Order> orders = this.orderService.getOrdersByUserId(UUID.fromString(userId));
+
+        RestResponse<List<Order>> restResponse = RestResponse.<List<Order>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Get orders by user id is successful!")
+                .data(orders)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(restResponse);
+    }
+
     @GetMapping("/{userId}")
     public ResponseEntity<?> getOrdersByUserId(@PathVariable("userId") String userId) {
+        String username = SecurityUtil.getCurrentUserLogin().isPresent()
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : null;
+        User user = this.userService.getUserByUsername(username);
+        if (!user.getId().toString().equals(userId)) {
+            throw new OrdersAccessDenied(userId);
+        }
+
         List<Order> orders = this.orderService.getOrdersByUserId(UUID.fromString(userId));
 
         RestResponse<List<Order>> restResponse = RestResponse.<List<Order>>builder()
@@ -127,6 +153,17 @@ public class OrderController {
                 .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restResponse);
+    }
+
+    @ExceptionHandler(OrdersAccessDenied.class)
+    public ResponseEntity<?> handleOrdersAccessDenied(OrdersAccessDenied e) {
+        RestResponse<Object> restResponse = RestResponse.builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .error("ORDERS_ACCESS_DENIED")
+                .message(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(restResponse);
     }
 
     @ExceptionHandler(OrderItemQuantityGreaterThanZero.class)

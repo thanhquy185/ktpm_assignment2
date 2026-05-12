@@ -33,9 +33,12 @@ const ProductsComponent: React.FC<ProductsComponentProps> = ({
           Thêm sản phẩm vào giỏ hàng thành công!
         </div>,
       );
-      // window.alert("Thêm sản phẩm vào giỏ hàng thành công!");
     } else if ((response as any).error) {
-      toast.error((response as any).message);
+      toast.error(
+        <div data-testid="toast-add-to-cart-error">
+          {(response as any).message}
+        </div>,
+      );
     }
 
     setAddToCart(null);

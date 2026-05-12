@@ -1,11 +1,13 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-
+import { formatPrice } from "../../../src/utils/priceCalculation";
 export class CartPage {
   readonly page: Page;
   readonly title: Locator;
   readonly goToCart: Locator;
   readonly cartEmptyInform: Locator;
   readonly cartFirstCartItemProductName: Locator;
+  readonly cartSummaryTotalQuantity: Locator;
+  readonly cartSummaryTotalPrice: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -15,6 +17,10 @@ export class CartPage {
     this.cartFirstCartItemProductName = page.getByTestId(
       "cart-item-product-name-CART-001",
     );
+    this.cartSummaryTotalQuantity = page.getByTestId(
+      "cart-summary-total-quantity",
+    );
+    this.cartSummaryTotalPrice = page.getByTestId("cart-summary-total-price");
   }
 
   async open(): Promise<void> {
@@ -30,5 +36,17 @@ export class CartPage {
 
   async checkFirstCartItem(productName: string): Promise<void> {
     await expect(this.cartFirstCartItemProductName).toContainText(productName);
+  }
+
+  async checkTotalQuantity(totalQuantity: number): Promise<void> {
+    await expect(this.cartSummaryTotalQuantity).toContainText(
+      totalQuantity + " sản phẩm",
+    );
+  }
+
+  async checkTotalPrice(totalPrice: number): Promise<void> {
+    await expect(this.cartSummaryTotalPrice).toContainText(
+      formatPrice(totalPrice),
+    );
   }
 }

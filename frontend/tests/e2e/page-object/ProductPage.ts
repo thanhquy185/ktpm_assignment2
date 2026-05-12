@@ -4,13 +4,17 @@ export class ProductPage {
   readonly page: Page;
   readonly title: Locator;
   readonly firstProductButton: Locator;
+  readonly secondProductButton: Locator;
   readonly toastAddToCartSuccess: Locator;
+  readonly toastAddToCartError: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.title = page.getByTestId("products-title");
     this.firstProductButton = page.getByTestId("product-card-button-PROD-001");
+    this.secondProductButton = page.getByTestId("product-card-button-PROD-002");
     this.toastAddToCartSuccess = page.getByTestId("toast-add-to-cart-success");
+    this.toastAddToCartError = page.getByTestId("toast-add-to-cart-error");
   }
 
   async open(): Promise<void> {
@@ -24,10 +28,22 @@ export class ProductPage {
     await this.firstProductButton.click();
   }
 
+  async clickSecondProductButton(): Promise<void> {
+    await expect(this.secondProductButton).toBeVisible();
+    await this.secondProductButton.click();
+  }
+
   async showToastAddToCartSuccess(): Promise<void> {
     await expect(this.toastAddToCartSuccess).toBeVisible();
     await expect(this.toastAddToCartSuccess).toContainText(
       "Thêm sản phẩm vào giỏ hàng thành công!",
+    );
+  }
+
+  async showToastAddToCartError(): Promise<void> {
+    await expect(this.toastAddToCartError).toBeVisible();
+    await expect(this.toastAddToCartError).toContainText(
+      "Insufficient stock for product ID PROD-002",
     );
   }
 }

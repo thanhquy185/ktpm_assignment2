@@ -19,14 +19,20 @@ const CartSummaryComponent: React.FC<CartSummaryComponentProps> = ({
       {/* Total quantity */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-gray-500">Tổng số lượng:</span>
-        <span className="font-semibold text-gray-800">
+        <span
+          data-testid="cart-summary-total-quantity"
+          className="font-semibold text-gray-800"
+        >
           {cart.totalQuantity || 0} sản phẩm
         </span>
       </div>
       {/* Total price */}
       <div className="flex items-center justify-between border-b border-dashed pb-5 mb-6">
         <span className="text-gray-500">Tổng tiền:</span>
-        <span className="text-2xl font-bold text-indigo-500">
+        <span
+          data-testid="cart-summary-total-price"
+          className="text-2xl font-bold text-indigo-500"
+        >
           {formatPrice(cart.totalPrice || 0)}
         </span>
       </div>

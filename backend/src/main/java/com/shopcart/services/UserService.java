@@ -26,6 +26,10 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFound(id));
     }
 
+    public List<User> getUserByUsernameError() {
+        return this.userRepository.findByUsernameError();
+    }
+
     public User getUserByUsername(String username) {
         return this.userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundByUsername(username));
