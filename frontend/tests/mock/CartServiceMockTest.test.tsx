@@ -76,7 +76,9 @@ describe("Cart Component Integration Tests", () => {
       });
 
       expect(toast.success).toHaveBeenCalledTimes(1);
-      expect(toast.success).toHaveBeenCalledWith(expect.any(Object));
+      expect(toast.success).toHaveBeenCalledWith(
+        "Thêm sản phẩm vào giỏ hàng thành công!",
+      );
     });
   });
 

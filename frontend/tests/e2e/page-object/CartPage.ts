@@ -6,6 +6,7 @@ export class CartPage {
   readonly goToCart: Locator;
   readonly cartEmptyInform: Locator;
   readonly cartFirstCartItemProductName: Locator;
+  readonly cartSecondCartItemProductName: Locator;
   readonly cartSummaryTotalQuantity: Locator;
   readonly cartSummaryTotalPrice: Locator;
 
@@ -16,6 +17,9 @@ export class CartPage {
     this.cartEmptyInform = page.getByTestId("cart-empty-inform");
     this.cartFirstCartItemProductName = page.getByTestId(
       "cart-item-product-name-CART-001",
+    );
+    this.cartSecondCartItemProductName = page.getByTestId(
+      "cart-item-product-name-CART-002",
     );
     this.cartSummaryTotalQuantity = page.getByTestId(
       "cart-summary-total-quantity",
@@ -36,6 +40,13 @@ export class CartPage {
 
   async checkFirstCartItem(productName: string): Promise<void> {
     await expect(this.cartFirstCartItemProductName).toContainText(productName);
+  }
+
+  async checkCartItem(cartItem: string, productName: string): Promise<void> {
+    const cartItemCheck = this.page.getByTestId(
+      `cart-item-product-name-${cartItem}`,
+    );
+    await expect(cartItemCheck).toContainText(productName);
   }
 
   async checkTotalQuantity(totalQuantity: number): Promise<void> {

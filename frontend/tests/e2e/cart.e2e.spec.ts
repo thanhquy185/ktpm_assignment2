@@ -1,11 +1,9 @@
-import { errors, expect, test } from "@playwright/test";
+import { test } from "@playwright/test";
 import { CartPage } from "./page-object/CartPage";
 import { CartType } from "../../src/types/cart";
 import { CartItemType } from "../../src/types/cartItem";
-import { ProductType } from "../../src/types/product";
 import { LoginPage } from "./page-object/LoginPage";
 import { ProductPage } from "./page-object/ProductPage";
-import { InventoryType } from "../../src/types/inventory";
 
 // const productsFixture: ProductType[] = [
 //   {
@@ -219,7 +217,7 @@ test.describe("Cart E2E Tests", () => {
 
     await cartPage.hiddenEmptyCartInform();
 
-    await cartPage.checkFirstCartItem("Macbook M4 Air");
+    await cartPage.checkCartItem("CART-001", "Macbook M4 Air");
 
     await cartPage.checkTotalQuantity(2);
 
@@ -230,11 +228,18 @@ test.describe("Cart E2E Tests", () => {
     page,
   }) => {
     const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
 
     await productPage.open();
 
     await productPage.clickSecondProductButton();
 
     await productPage.showToastAddToCartError();
+
+    await cartPage.open();
+
+    await cartPage.hiddenEmptyCartInform();
+
+    await cartPage.checkCartItem("CART-002", "Laptop DELL");
   });
 });

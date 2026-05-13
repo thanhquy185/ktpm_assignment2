@@ -28,17 +28,19 @@ const ProductsComponent: React.FC<ProductsComponentProps> = ({
     } as CartItemAddToCartRequest);
     if (response.status === HttpStatusCode.Created && response.data) {
       await fetchProducts();
-      toast.success(
-        <div data-testid="toast-add-to-cart-success">
-          Thêm sản phẩm vào giỏ hàng thành công!
-        </div>,
-      );
+      toast.success("Thêm sản phẩm vào giỏ hàng thành công!");
+      // toast.success(
+      //   <div data-testid="toast-add-to-cart-success">
+      //     Thêm sản phẩm vào giỏ hàng thành công!
+      //   </div>,
+      // );
     } else if ((response as any).error) {
-      toast.error(
-        <div data-testid="toast-add-to-cart-error">
-          {(response as any).message}
-        </div>,
-      );
+      // toast.error(
+      //   <div data-testid="toast-add-to-cart-error">
+      //     {(response as any).message}
+      //   </div>,
+      // );
+      toast.error((response as any).message);
     }
 
     setAddToCart(null);

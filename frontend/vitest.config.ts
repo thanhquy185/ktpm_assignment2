@@ -10,8 +10,8 @@ export default defineConfig({
     setupFiles: "./setupTests.ts",
     include: [
       "tests/unit/*.test.ts",
-      "tests/integration/*.test.ts",
-      "tests/mock/*.test.ts",
+      "tests/integration/*.test.tsx",
+      "tests/mock/*.test.tsx",
     ],
     exclude: ["tests/e2e/**"],
     coverage: {
